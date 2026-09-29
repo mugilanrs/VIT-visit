@@ -1600,17 +1600,13 @@
          + '<polygon fill="'+color+'" fill-opacity="0.92" points="'+pstr(roof)+'"/>'
          + line([t00,tW0,tWD,t0D,t00],'edge')+line([bWD,tWD],'edge')+line([bW0,tW0],'edge')+line([b0D,t0D],'edge')+line([b00,t00],'edge');
   }
-  // a small floating column (one of the five strategy pillars), solid-coloured
+  // a slim, solid-coloured column that floats on its own (no base, no capital)
   function miniPillar(cx, cy, lift0, accent, roman){
-    var g='', bw=0.66, bh=0.2, qb=propQ(cx,cy,bw,bw,lift0);
-    g += accentBox(qb,bw,bw,bh,accent);
-    var sw=0.42, sh=1.9, lift=lift0+bh, qs=propQ(cx,cy,sw,sw,lift);
-    g += accentBox(qs,sw,sw,sh,accent);
-    var cw=0.66, ch=0.2, lift2=lift+sh, qc=propQ(cx,cy,cw,cw,lift2);
-    g += accentBox(qc,cw,cw,ch,accent);
-    var top=propQ(cx,cy,cw,cw,lift2+ch)(0.5,0.5,0);
+    var sw=0.5, sh=2.2, qs=propQ(cx,cy,sw,sw,lift0);
+    var g=accentBox(qs,sw,sw,sh,accent);
+    var top=propQ(cx,cy,sw,sw,lift0+sh)(0.5,0.5,0);
     g += '<text x="'+top[0].toFixed(1)+'" y="'+(top[1]-3).toFixed(1)+'" text-anchor="middle" font-family="Bricolage Grotesque,serif" font-weight="800" font-size="11" fill="#fff">'+roman+'</text>';
-    return { g:g, topH:lift2+ch };
+    return { g:g, topH:lift0+sh };
   }
 
   // build one distinct, topic-COLOURED prop that FLOATS freely in the room (no pedestal).
@@ -1693,15 +1689,24 @@
   }
 
   function buildRoom(i){
-    var l=LOC[i], ss=l.sessions||[], n=ss.length;
+    var l=LOC[i], ss=l.sessions||[], n=ss.length, conf=(l.type==='board');
     currentLoc=i; roomProps=[]; roomPropEls=[]; roomMkEls=[];
     var CX=0, CY=0, spanA=(n>1?3.7:0);
-    var pos=[];
-    for(var k=0;k<n;k++){
-      var a=(k-(n-1)/2)*spanA, b=(k%2===0?-1:1)*1.45;
-      pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
+    var pos=[], k;
+    if(conf){
+      // the 5 session props float in a ring AROUND a central conference table
+      var Ra=4.6, Rb=3.2;
+      for(k=0;k<n;k++){
+        var th=(-90 + k*(360/n))*Math.PI/180, a=Ra*Math.cos(th), b=Rb*Math.sin(th);
+        pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
+      }
+    } else {
+      for(k=0;k<n;k++){
+        var la=(k-(n-1)/2)*spanA, lb=(k%2===0?-1:1)*1.45;
+        pos.push([ CX+Ex*la+Dx*lb, CY+Ey*la+Dy*lb ]);
+      }
     }
-    var world='', WH=3.4, FA=Math.max(6, spanA*(n-1)/2 + 3.2), FB=6.5;
+    var world='', WH=3.4, FA=Math.max(6, (conf?5.6:spanA*(n-1)/2) + 3.2), FB=conf?7.0:6.5;
     function wp(a,b,up){ return [CX+Ex*a+Dx*b+Ux*up, CY+Ey*a+Dy*b+Uy*up]; }
     // ---- shell: back walls (north + west), floor, grid ----
     world+='<polygon class="room-wall-r" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';
@@ -1714,8 +1719,8 @@
     var ga,gb;
     for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
     for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
-    // a centred rug the props hover over
-    var ra=Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=Math.min(FB-1.2, 3.2);
+    // a centred rug under the table / props
+    var ra=conf?5.6:Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=conf?4.2:Math.min(FB-1.2, 3.2);
     world+='<polygon class="room-rug" fill="var(--soft)" points="'+pstr([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0)])+'"/>';
     world+=line([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0),wp(-ra,-rb,0)],'room-panel-edge');
     // ---- back-wall dressing ----
@@ -1769,6 +1774,36 @@
       return g;
     }
     world+='<g class="bld">'+plant(-FA+1.3,-FB+1.3)+plant(FA-1.3,-FB+1.3)+'</g>';
+
+    // ---- conference table + chairs (Board Room) ----
+    if(conf){
+      var boxBld=function(a0,b0,w,d,h,up0){
+        var q=function(la,lb,lu){ return wp(a0+la,b0+lb,up0+lu); };
+        return isoBox(q,w,d,h);
+      };
+      var TH=1.0, TA=3.4, TB=1.9, cs=0.62;   // table height, half-extents, chair seat size
+      var chair=function(ca,cb){
+        var g=boxBld(ca-cs/2, cb-cs/2, cs, cs, 0.5, 0);   // seat
+        if(Math.abs(cb)>=Math.abs(ca)){                    // backrest on the outer long side
+          var bb=cb<0?cb-cs/2:cb+cs/2-0.12; g+=boxBld(ca-cs/2, bb, cs, 0.12, 1.05, 0);
+        } else {                                           // backrest on the outer short end
+          var ba=ca<0?ca-cs/2:ca+cs/2-0.12; g+=boxBld(ba, cb-cs/2, 0.12, cs, 1.05, 0);
+        }
+        return g;
+      };
+      var chairPos=[[-1.8,-TB-0.7],[0,-TB-0.7],[1.8,-TB-0.7],
+                    [-1.8,TB+0.7],[0,TB+0.7],[1.8,TB+0.7],
+                    [-TA-0.7,0],[TA+0.7,0]];
+      var backChairs='', frontChairs='';
+      chairPos.forEach(function(c){ if(c[1]<0) backChairs+=chair(c[0],c[1]); else frontChairs+=chair(c[0],c[1]); });
+      var tbl='';
+      [[-TA+0.2,-TB+0.2],[TA-0.4,-TB+0.2],[-TA+0.2,TB-0.4],[TA-0.4,TB-0.4]].forEach(function(p){ tbl+=boxBld(p[0],p[1],0.2,0.2,TH,0); });
+      tbl+=boxBld(-TA+0.2,-TB+0.2,2*TA-0.4,2*TB-0.4,0.18,TH-0.22);   // apron
+      tbl+=boxBld(-TA,-TB,2*TA,2*TB,0.16,TH);                        // top slab
+      var qtop=function(la,lb,lu){ return wp(-TA+la,-TB+lb,TH+0.16+lu); };
+      tbl+=accentTop(qtop,2*TA,2*TB,0,'var(--deep)',0.08);
+      world+='<g class="bld">'+backChairs+tbl+frontChairs+'</g>';
+    }
 
     // ---- props, painter-sorted back→front; shadows grounded, bodies float ----
     var order=[]; for(k=0;k<n;k++) order.push(k);
