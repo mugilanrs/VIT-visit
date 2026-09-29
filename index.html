@@ -540,10 +540,38 @@
   .room-hint .sub { margin:10px 0 0; font-size:13.5px; color:var(--muted); }
   .room-tools { z-index:5; }
   .room-callout { z-index:8; }
-  .room-callout .r-note { margin:0 0 10px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+  .room-callout .r-note { margin:0 0 8px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+  .room-callout .r-time { font-size:13px; font-weight:700; color:var(--deep); font-variant-numeric:tabular-nums; margin:0 0 8px; }
+  .room-callout .r-meta { font-size:12.5px; color:var(--muted); margin:0 0 4px; }
+  .room-callout .r-meta b { color:var(--ink); font-weight:700; }
   /* iso prop shapes reuse .bld face classes; add per-prop accent + interactions */
   .prop3d { cursor:pointer; }
   .prop3d .p-accent { transition:fill-opacity .3s ease; }
+  /* floating props: the body bobs, its shadow stays on the floor */
+  .prop-body { animation:floaty 4.6s ease-in-out infinite; animation-delay:var(--fd,0s);
+    transform-origin:center; will-change:transform; }
+  .prop3d.active .prop-body { animation-duration:3.2s; }
+  @keyframes floaty { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-9px); } }
+  .prop-shadow { animation:floatShadow 4.6s ease-in-out infinite; animation-delay:var(--fd,0s);
+    transform-box:fill-box; transform-origin:center; }
+  @keyframes floatShadow { 0%,100%{ transform:scale(1); opacity:1; } 50%{ transform:scale(.86); opacity:.7; } }
+  @media (prefers-reduced-motion:reduce){ .prop-body, .prop-shadow { animation:none; } }
+  .p-tether { stroke:var(--edge); stroke-width:1.4; stroke-dasharray:2 4; opacity:.4; fill:none; vector-effect:non-scaling-stroke; }
+  /* decorative room dressing */
+  .room-rug { opacity:.5; }
+  .room-panel-l { fill:var(--bld-left); opacity:.6; } .room-panel-r { fill:var(--bld-right); opacity:.55; }
+  .room-panel-edge { stroke:var(--edge); stroke-width:1.2; fill:none; opacity:.5; vector-effect:non-scaling-stroke; }
+  .room-base { fill:var(--edge); opacity:.5; }
+  .room-lamp-cord { stroke:var(--edge); stroke-width:1.4; opacity:.5; vector-effect:non-scaling-stroke; }
+
+  /* floating contact / info icons inside the interior room */
+  .interior-rail { position:absolute; z-index:9; left:16px; top:50%; transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:12px; }
+  .interior-rail .rail-item { position:relative; }
+  .interior-rail .rail-icon { animation:floaty 5.2s ease-in-out infinite; }
+  .interior-rail .rail-icon.i2 { animation-delay:-2.4s; }
+  @media (prefers-reduced-motion:reduce){ .interior-rail .rail-icon { animation:none; } }
+  @media (max-width:1160px){ .interior-rail { display:none; } }
   .p-emblem-ic { fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
   .p-badge { stroke:var(--paper); stroke-width:3; transition:transform .25s ease; transform-box:fill-box; transform-origin:center; }
   .prop-marker:hover .p-badge, .prop-marker.active .p-badge { transform:scale(1.14); }
@@ -771,14 +799,53 @@
         <h1 id="intTitle"></h1>
         <p class="sub" id="intSub"></p>
       </div>
+
+      <!-- floating contact / info icons, mirrored from the main map -->
+      <aside class="interior-rail" aria-label="Event information">
+        <div class="rail-item" id="intItemEvent">
+          <button class="rail-icon" aria-expanded="false" aria-controls="intPopEvent" aria-label="The Event">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+          </button>
+          <div class="rail-card rail-pop" id="intPopEvent" role="region" aria-label="The Event details">
+            <p class="rail-eyebrow">The Event</p>
+            <h3>Annual Company Day</h3>
+            <ul class="rail-list">
+              <li><span>When</span><b>Fri, 14 Nov 2026</b></li>
+              <li><span>Where</span><b>Main Campus</b></li>
+              <li><span>Doors</span><b>08:30 onwards</b></li>
+            </ul>
+          </div>
+        </div>
+        <div class="rail-item" id="intItemContacts">
+          <button class="rail-icon i2" aria-expanded="false" aria-controls="intPopContacts" aria-label="Contacts">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c0-.8.7-1.5 1.5-1.5H8l1.5 4-2 1.2a12 12 0 0 0 5.8 5.8l1.2-2 4 1.5v2.5c0 .8-.7 1.5-1.5 1.5A15.5 15.5 0 0 1 4 5.5z"/></svg>
+          </button>
+          <div class="rail-card rail-pop" id="intPopContacts" role="region" aria-label="Contacts details">
+            <p class="rail-eyebrow">Contacts</p>
+            <ul class="rail-list">
+              <li><span>Event desk</span><b>+91 90000 00000</b></li>
+              <li><span>RSVP</span><b>rsvp@company.com</b></li>
+              <li><span>Help</span><b>help@company.com</b></li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+
       <div class="maptools room-tools"><button id="roomOverview">Overview</button></div>
       <article class="callout room-callout" id="roomCallout" hidden>
         <span class="callout-stem" aria-hidden="true"></span>
         <button class="callout-close" id="roomCalloutClose" aria-label="Close">×</button>
         <div class="top"><span class="chip" id="r-chip"></span><span class="place" id="r-place"></span></div>
         <h2 id="r-title"></h2>
+        <div class="r-time" id="r-time"></div>
+        <p class="r-meta" id="r-speaker"></p>
         <p class="r-note" id="r-note"></p>
         <div class="tags" id="r-tags"></div>
+        <div class="callout-nav">
+          <button class="cbtn" id="r-prev" aria-label="Previous session">‹</button>
+          <span class="c-count" id="r-count"></span>
+          <button class="cbtn cbtn-next" id="r-next">Next ›</button>
+        </div>
       </article>
     </div>
   </div>
@@ -797,7 +864,8 @@
       type:'airport', x:430, y:1990, w:6.2, d:4, h:1.3,
       venue:'Arrivals Lobby',
       sessions:[
-        { t:'Arrival & Registration', prop:'welcome', sub:['Badge pickup','Welcome coffee'] }
+        { t:'Arrival & Registration', prop:'welcome', time:'09:00 — 09:45', speaker:'Speaker TBA',
+          sub:['Badge pickup','Welcome coffee'] }
       ] },
     { n:'02', name:'Board Room',      title:'Leadership Keynote', time:'10:00 — 11:15',
       who:'Executive Leadership', tags:['Keynote','Vision'],
@@ -805,12 +873,17 @@
       type:'board', x:1010, y:1570, w:3.4, d:3.4, h:3.0,
       venue:'EB3 Board Room',
       sessions:[
-        { t:'TCS AI Vision, Maturity & Strategic Capabilities', prop:'vision',
+        { t:'TCS AI Vision, Maturity & Strategic Capabilities', prop:'vision', pillars:true,
+          time:'10:00 — 10:15', speaker:'Speaker TBA',
           sub:['Talent Transformation','Tokenomics','AI Governance'] },
-        { t:'AI-based Product Development', prop:'product', sub:[] },
-        { t:'AI for AD — Software Engineering Loop (SEL)', prop:'loop', sub:[] },
-        { t:'Quality Assurance & Testing Frameworks for AI', prop:'qa', sub:[] },
-        { t:'Rapid Build', prop:'rapid', sub:[] }
+        { t:'AI-based Product Development', prop:'product',
+          time:'10:15 — 10:30', speaker:'Speaker TBA', sub:[] },
+        { t:'AI for AD — Software Engineering Loop (SEL)', prop:'loop',
+          time:'10:30 — 10:50', speaker:'Speaker TBA', sub:[] },
+        { t:'Quality Assurance & Testing Frameworks for AI', prop:'qa',
+          time:'10:50 — 11:05', speaker:'Speaker TBA', sub:[] },
+        { t:'Rapid Build', prop:'rapid',
+          time:'11:05 — 11:15', speaker:'Speaker TBA', sub:[] }
       ] },
     { n:'03', name:'Signature Tower', title:'Strategy & Vision', time:'11:30 — 13:00',
       who:'Strategy Office', tags:['Strategy','Roadmap'],
@@ -818,7 +891,8 @@
       type:'tower', x:470, y:1090, w:2.2, d:2.2, h:7.2,
       venue:'Signature Tower',
       sessions:[
-        { t:'Strategy & Vision', prop:'vision', sub:['Market','Roadmap','The three moves'] }
+        { t:'Strategy & Vision', prop:'vision', time:'11:30 — 13:00', speaker:'Speaker TBA',
+          sub:['Market','Roadmap','The three moves'] }
       ] },
     { n:'04', name:'ODC', title:'Engineering at Scale', time:'14:00 — 15:30',
       who:'Engineering', tags:['Engineering','Platform'],
@@ -826,7 +900,8 @@
       type:'odc', x:1080, y:650, w:4.2, d:3, h:2.5,
       venue:'Delivery Centre',
       sessions:[
-        { t:'Engineering at Scale', prop:'product', sub:['Platform','Reliability at millions of requests'] }
+        { t:'Engineering at Scale', prop:'product', time:'14:00 — 15:30', speaker:'Speaker TBA',
+          sub:['Platform','Reliability at millions of requests'] }
       ] },
     { n:'05', name:'EB 5', title:'Innovation & Growth', time:'16:00 — 17:30',
       who:'Product & Growth', tags:['Innovation','Demos'],
@@ -834,7 +909,8 @@
       type:'eb5', x:640, y:250, w:3.6, d:3.1, h:3.4,
       venue:'Innovation Floor',
       sessions:[
-        { t:'Innovation & Growth', prop:'rapid', sub:['New ideas','Live demos','Open floor'] }
+        { t:'Innovation & Growth', prop:'rapid', time:'16:00 — 17:30', speaker:'Speaker TBA',
+          sub:['New ideas','Live demos','Open floor'] }
       ] }
   ];
   var N = LOC.length;
@@ -1432,7 +1508,9 @@
       roomHint = document.getElementById('roomHint'), roomCallout = document.getElementById('roomCallout');
   var rChip=document.getElementById('r-chip'), rPlace=document.getElementById('r-place'),
       rTitle=document.getElementById('r-title'), rNote=document.getElementById('r-note'),
-      rTags=document.getElementById('r-tags');
+      rTags=document.getElementById('r-tags'), rTime=document.getElementById('r-time'),
+      rSpeaker=document.getElementById('r-speaker'), rCount=document.getElementById('r-count'),
+      rPrev=document.getElementById('r-prev'), rNext=document.getElementById('r-next');
 
   // per-session accent, short label, and emblem (inner 24x24 line-art)
   var ACCENT = { vision:'#7c5cff', product:'#1fa971', loop:'#e0518e', qa:'#e8973a', rapid:'#ff4d6d', welcome:'#3d9be9', 'default':'#8a94a6' };
@@ -1487,34 +1565,108 @@
   function ring(x,y,color){
     return '<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="'+(S*0.55).toFixed(1)+'" ry="'+(S*0.27).toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="3.6"/>';
   }
-  // build one distinct iso prop; returns {svg, mx, my} (mx,my = badge anchor above it)
-  function drawShape(type, cx, cy, accent){
-    var svg='', lift, topH, w, d, h, q;
-    svg += '<ellipse class="p-shadow" cx="'+(cx+7).toFixed(1)+'" cy="'+(cy+7).toFixed(1)+'" rx="'+(S*1.55).toFixed(1)+'" ry="'+(S*0.8).toFixed(1)+'"/>';
-    var pw=2.2, ph=0.4, qp=propQ(cx,cy,pw,pw,0);
-    svg += isoBox(qp,pw,pw,ph) + accentTop(qp,pw,pw,ph,accent,0.26);
-    lift = ph;
+  // a small isometric check-mark drawn on top of a prop (for QA)
+  function checkMark(cx,cy,lift,color){
+    var q=propQ(cx,cy,1,1,lift);
+    var a=q(0.28,0.55,0), b=q(0.46,0.30,0), c=q(0.80,0.72,0);
+    return '<polyline points="'+pstr([a,b,c])+'" fill="none" stroke="'+color+'" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  }
+  // ---- solid, topic-COLOURED iso primitives (so a floating prop reads as an object, not a grey pedestal) ----
+  function accentBox(q,w,d,h,color){
+    var fRight=[q(w,0,0),q(w,d,0),q(w,d,h),q(w,0,h)];
+    var fLeft =[q(0,d,0),q(w,d,0),q(w,d,h),q(0,d,h)];
+    var fRoof =[q(0,0,h),q(w,0,h),q(w,d,h),q(0,d,h)];
+    return '<polygon fill="'+color+'" fill-opacity="0.92" points="'+pstr(fRoof)+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.66" points="'+pstr(fLeft)+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.48" points="'+pstr(fRight)+'"/>'
+         + line([q(0,0,h),q(w,0,h),q(w,d,h),q(0,d,h),q(0,0,h)],'edge')
+         + line([q(w,d,0),q(w,d,h)],'edge')+line([q(w,0,0),q(w,0,h)],'edge')+line([q(0,d,0),q(0,d,h)],'edge');
+  }
+  function accentPyr(q,w,d,ph,color){
+    var apex=q(w/2,d/2,ph), p00=q(0,0,0),pW0=q(w,0,0),pWD=q(w,d,0),p0D=q(0,d,0);
+    return '<polygon fill="'+color+'" fill-opacity="0.92" points="'+pstr([p00,pW0,apex])+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.48" points="'+pstr([pW0,pWD,apex])+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.66" points="'+pstr([p0D,pWD,apex])+'"/>'
+         + line([p00,apex],'edge')+line([pW0,apex],'edge')+line([pWD,apex],'edge')+line([p0D,apex],'edge');
+  }
+  function accentFrustumC(cx,cy,lift,bw,bd,tw,td,h,color){
+    var qb=propQ(cx,cy,bw,bd,lift), qt=propQ(cx,cy,bw,bd,lift+h);
+    var ox=(bw-tw)/2, oy=(bd-td)/2;
+    var bW0=qb(bw,0,0),bWD=qb(bw,bd,0),b0D=qb(0,bd,0),b00=qb(0,0,0);
+    var t00=qt(ox,oy,0),tW0=qt(ox+tw,oy,0),tWD=qt(ox+tw,oy+td,0),t0D=qt(ox,oy+td,0);
+    var right=[bW0,bWD,tWD,tW0], left=[b0D,bWD,tWD,t0D], roof=[t00,tW0,tWD,t0D];
+    return '<polygon fill="'+color+'" fill-opacity="0.48" points="'+pstr(right)+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.66" points="'+pstr(left)+'"/>'
+         + '<polygon fill="'+color+'" fill-opacity="0.92" points="'+pstr(roof)+'"/>'
+         + line([t00,tW0,tWD,t0D,t00],'edge')+line([bWD,tWD],'edge')+line([bW0,tW0],'edge')+line([b0D,t0D],'edge')+line([b00,t00],'edge');
+  }
+  // a small floating column (one of the five strategy pillars), solid-coloured
+  function miniPillar(cx, cy, lift0, accent, roman){
+    var g='', bw=0.66, bh=0.2, qb=propQ(cx,cy,bw,bw,lift0);
+    g += accentBox(qb,bw,bw,bh,accent);
+    var sw=0.42, sh=1.9, lift=lift0+bh, qs=propQ(cx,cy,sw,sw,lift);
+    g += accentBox(qs,sw,sw,sh,accent);
+    var cw=0.66, ch=0.2, lift2=lift+sh, qc=propQ(cx,cy,cw,cw,lift2);
+    g += accentBox(qc,cw,cw,ch,accent);
+    var top=propQ(cx,cy,cw,cw,lift2+ch)(0.5,0.5,0);
+    g += '<text x="'+top[0].toFixed(1)+'" y="'+(top[1]-3).toFixed(1)+'" text-anchor="middle" font-family="Bricolage Grotesque,serif" font-weight="800" font-size="11" fill="#fff">'+roman+'</text>';
+    return { g:g, topH:lift2+ch };
+  }
+
+  // build one distinct, topic-COLOURED prop that FLOATS freely in the room (no pedestal).
+  // returns { shadow (grounded), body (floats), mx, my (badge anchor) }
+  function drawShape(type, cx, cy, accent, session){
+    var FLOAT=1.9;                 // hover height, in tiles — the object floats here
+    var body='', lift=FLOAT, topH=FLOAT, w, d, h, q;
+    var shadow='<ellipse class="p-shadow prop-shadow" cx="'+cx.toFixed(1)+'" cy="'+(cy+6).toFixed(1)+'" rx="'+(S*1.05).toFixed(1)+'" ry="'+(S*0.52).toFixed(1)+'"/>';
+
+    if(session && session.pillars){
+      // FIVE FLOATING PILLARS — TCS 5-pillar transformation strategy (this session only)
+      var romans=['I','II','III','IV','V'], maxTop=FLOAT;
+      for(var pi=0; pi<5; pi++){
+        var off=(pi-2)*0.98;                                   // spread along the east axis
+        var px=cx+Ex*off, py=cy+Ey*off, pl=FLOAT+Math.abs(pi-2)*0.16; // slight stagger
+        var mp=miniPillar(px,py,pl,accent,romans[pi]);
+        body+=mp.g; if(mp.topH>maxTop) maxTop=mp.topH;
+      }
+      var mkP=propQ(cx,cy,1,1,maxTop+0.6)(0.5,0.5,0);
+      return { shadow:shadow, body:body, mx:mkP[0], my:mkP[1] };
+    }
+
     if(type==='product'){
-      w=1.5; h=1.1; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
-      var w2=1.0,h2=0.85, q2=propQ(cx,cy,w2,w2,lift+h); svg+=isoBox(q2,w2,w2,h2)+accentTop(q2,w2,w2,h2,accent,0.55);
-      topH=lift+h+h2;
+      // a package cube with a tape cross — product development
+      w=1.35; h=1.2; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
+      var qr=propQ(cx,cy,w,w,lift+h);
+      body+=line([qr(w/2,0,0),qr(w/2,w,0)],'edge')+line([qr(0,w/2,0),qr(w,w/2,0)],'edge');
+      topH=lift+h;
     } else if(type==='rapid'){
-      w=0.9; h=1.9; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
-      svg+=pyramid(propQ(cx,cy,w,w,lift+h), w,w,0.95, accent); topH=lift+h+0.95;
+      // rocket — rapid build / speed
+      w=0.95; h=1.5; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
+      body+=accentPyr(propQ(cx,cy,w,w,lift+h), w,w,1.0, accent); topH=lift+h+1.0;
     } else if(type==='qa'){
-      svg+=frustum(cx,cy,lift,1.9,1.9,1.05,1.05,1.7,accent); topH=lift+1.7;
-    } else if(type==='vision' || type==='loop'){
-      w=1.1; h=1.6; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
+      // shield with a check-mark — quality & testing
+      body+=accentFrustumC(cx,cy,lift,1.7,1.7,0.9,0.9,1.6,accent);
+      body+=checkMark(cx,cy,lift+1.62,'#ffffff');
+      topH=lift+1.6;
+    } else if(type==='vision'){
+      // core cube + orbit ring + iris — AI vision (an eye)
+      w=1.15; h=1.15; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
       var ct=propQ(cx,cy,w,w,lift+h)(0.5,0.5,0);
-      svg+=ring(ct[0], ct[1]-S*0.25, accent);
-      if(type==='vision'){ svg+='<circle cx="'+ct[0].toFixed(1)+'" cy="'+(ct[1]-S*0.25).toFixed(1)+'" r="'+(S*0.15).toFixed(1)+'" fill="'+accent+'"/>'; }
-      else { svg+=ring(ct[0], ct[1]-S*0.62, accent); }
-      topH=lift+h+0.95;
+      body+=ring(ct[0], ct[1]-S*0.22, '#fff')
+          +'<circle cx="'+ct[0].toFixed(1)+'" cy="'+(ct[1]-S*0.22).toFixed(1)+'" r="'+(S*0.16).toFixed(1)+'" fill="#fff"/>';
+      topH=lift+h+0.85;
+    } else if(type==='loop'){
+      // core cube + twin rings — software engineering loop (SEL)
+      w=1.1; h=1.15; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
+      var cl=propQ(cx,cy,w,w,lift+h)(0.5,0.5,0);
+      body+=ring(cl[0], cl[1]-S*0.22, '#fff')+ring(cl[0], cl[1]-S*0.56, '#fff');
+      topH=lift+h+0.85;
     } else {
-      w=1.6; h=1.2; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4); topH=lift+h;
+      // welcome desk — a wide, low reception block
+      w=1.8; d=1.2; h=0.95; q=propQ(cx,cy,w,d,lift); body+=accentBox(q,w,d,h,accent); topH=lift+h;
     }
     var mk=propQ(cx,cy,1,1,topH+0.55)(0.5,0.5,0);
-    return { svg:svg, mx:mk[0], my:mk[1] };
+    return { shadow:shadow, body:body, mx:mk[0], my:mk[1] };
   }
 
   // ---- room state + camera ----
@@ -1549,25 +1701,86 @@
       var a=(k-(n-1)/2)*spanA, b=(k%2===0?-1:1)*1.45;
       pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
     }
-    var world='', WH=3.2, FA=Math.max(6, spanA*(n-1)/2 + 3), FB=6.5;
+    var world='', WH=3.4, FA=Math.max(6, spanA*(n-1)/2 + 3.2), FB=6.5;
     function wp(a,b,up){ return [CX+Ex*a+Dx*b+Ux*up, CY+Ey*a+Dy*b+Uy*up]; }
-    // back walls (north + west), then floor, then grid
+    // ---- shell: back walls (north + west), floor, grid ----
     world+='<polygon class="room-wall-r" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';
-    world+=line([wp(-FA,-FB,WH),wp(FA,-FB,WH)],'room-wall-edge');
     world+='<polygon class="room-wall-l" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)])+'"/>';
-    world+=line([wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)],'room-wall-edge');
     world+='<polygon class="room-floor-fill" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,FB,0),wp(-FA,FB,0)])+'"/>';
+    // baseboards along both wall/floor junctions
+    world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
+    world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
+    // floor grid
     var ga,gb;
     for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
     for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
-    // props, painter-sorted back→front, markers on top
+    // a centred rug the props hover over
+    var ra=Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=Math.min(FB-1.2, 3.2);
+    world+='<polygon class="room-rug" fill="var(--soft)" points="'+pstr([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0)])+'"/>';
+    world+=line([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0),wp(-ra,-rb,0)],'room-panel-edge');
+    // ---- back-wall dressing ----
+    function edgeRect(a0,a1,u0,u1,cls){ return line([wp(a0,-FB,u0),wp(a1,-FB,u0),wp(a1,-FB,u1),wp(a0,-FB,u1),wp(a0,-FB,u0)],cls||'room-panel-edge'); }
+    if(l.type==='board'){
+      // a real WINDOW on the back wall (glass + sky + mullions) — it's the Board Room
+      var wx0=-5.4,wx1=-2.0,wu0=1.35,wu1=2.85, wmx=(wx0+wx1)/2, wmu=(wu0+wu1)/2;
+      world+='<polygon fill="#bcd8ff" points="'+pstr([wp(wx0,-FB,wu0),wp(wx1,-FB,wu0),wp(wx1,-FB,wu1),wp(wx0,-FB,wu1)])+'"/>';
+      world+='<polygon fill="#eaf3ff" opacity="0.6" points="'+pstr([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu),wp(wx1,-FB,wu1),wp(wx0,-FB,wu1)])+'"/>';
+      var sun=wp(wx1-0.7,-FB,wu1-0.4); world+='<circle cx="'+sun[0].toFixed(1)+'" cy="'+sun[1].toFixed(1)+'" r="9" fill="#fff2c2" opacity="0.9"/>';
+      world+=line([wp(wmx,-FB,wu0),wp(wmx,-FB,wu1)],'room-panel-edge');
+      world+=line([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu)],'room-panel-edge');
+      world+=edgeRect(wx0,wx1,wu0,wu1,'room-wall-edge');
+      // a presentation BOARD (whiteboard) on the back wall
+      var bx0=1.4,bx1=5.4,bu0=1.2,bu1=2.75;
+      world+='<polygon fill="#ffffff" points="'+pstr([wp(bx0,-FB,bu0),wp(bx1,-FB,bu0),wp(bx1,-FB,bu1),wp(bx0,-FB,bu1)])+'"/>';
+      world+=edgeRect(bx0,bx1,bu0,bu1,'room-wall-edge');
+      world+='<polyline points="'+pstr([wp(bx0+0.5,-FB,2.35),wp(bx1-0.8,-FB,2.35)])+'" fill="none" stroke="var(--pink)" stroke-width="2.4" opacity="0.75"/>';
+      world+='<polyline points="'+pstr([wp(bx0+0.5,-FB,1.95),wp(bx1-1.6,-FB,1.95)])+'" fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.4"/>';
+      world+='<polyline points="'+pstr([wp(bx0+0.5,-FB,1.62),wp(bx1-1.1,-FB,1.62)])+'" fill="none" stroke="var(--ink)" stroke-width="2" opacity="0.4"/>';
+      world+='<polyline points="'+pstr([wp(bx0+2.6,-FB,2.3),wp(bx0+3.4,-FB,1.5),wp(bx0+2.9,-FB,1.5)])+'" fill="none" stroke="var(--deep)" stroke-width="2.2" opacity="0.6"/>';
+      // board tray
+      world+=line([wp(bx0,-FB,bu0-0.06),wp(bx1,-FB,bu0-0.06)],'room-wall-edge');
+    } else {
+      // a presentation screen on the back wall for the other rooms
+      world+='<polygon fill="var(--ink)" opacity="0.82" points="'+pstr([wp(-3.1,-FB,1.15),wp(3.1,-FB,1.15),wp(3.1,-FB,2.75),wp(-3.1,-FB,2.75)])+'"/>';
+      world+=edgeRect(-3.1,3.1,1.15,2.75);
+    }
+    // framed panels on the side (west) wall — every room
+    world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6)])+'"/>';
+    world+=line([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6),wp(-FA,-2.4,1.2)],'room-panel-edge');
+    world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6)])+'"/>';
+    world+=line([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6),wp(-FA,1.0,1.2)],'room-panel-edge');
+    // top edges of the walls
+    world+=line([wp(-FA,-FB,WH),wp(FA,-FB,WH)],'room-wall-edge');
+    world+=line([wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)],'room-wall-edge');
+    // pendant lamps hanging over the room
+    var lampA=[-3.4,0,3.4], li;
+    for(li=0; li<lampA.length; li++){
+      var top=wp(lampA[li],-1.5,WH+1.6), bot=wp(lampA[li],-1.5,WH+0.5);
+      world+=line([top,bot],'room-lamp-cord');
+      world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+bot[1].toFixed(1)+'" r="7" fill="var(--pink)" opacity="0.85"/>';
+      world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+(bot[1]-1).toFixed(1)+'" r="3.4" fill="#fff" opacity="0.7"/>';
+    }
+    // two potted plants in the back corners
+    function plant(pa,pb){
+      var g='', pw=0.7, ph=0.75, q=propQ(wp(pa,pb,0)[0], wp(pa,pb,0)[1], pw,pw,0);
+      g+=isoBox(q,pw,pw,ph)+accentTop(q,pw,pw,ph,'#1fa971',0.3);
+      var c=q(pw/2,pw/2,ph)[0], cy2=q(pw/2,pw/2,ph)[1];
+      g+='<ellipse cx="'+c.toFixed(1)+'" cy="'+(cy2-S*0.7).toFixed(1)+'" rx="'+(S*0.5).toFixed(1)+'" ry="'+(S*0.62).toFixed(1)+'" fill="#1fa971" opacity="0.85"/>';
+      return g;
+    }
+    world+='<g class="bld">'+plant(-FA+1.3,-FB+1.3)+plant(FA-1.3,-FB+1.3)+'</g>';
+
+    // ---- props, painter-sorted back→front; shadows grounded, bodies float ----
     var order=[]; for(k=0;k<n;k++) order.push(k);
     order.sort(function(A,B){ return pos[A][1]-pos[B][1]; });
     var markers='';
     order.forEach(function(idx){
-      var s=ss[idx], accent=ACCENT[s.prop]||ACCENT['default'], sh=drawShape(s.prop, pos[idx][0], pos[idx][1], accent);
-      world+='<g class="bld prop3d" id="rp'+idx+'" data-room-go="'+idx+'">'+sh.svg+'</g>';
-      var lbl=SHORT[s.prop]||('Session '+(idx+1));
+      var s=ss[idx], accent=ACCENT[s.prop]||ACCENT['default'];
+      var sh = drawShape(s.prop, pos[idx][0], pos[idx][1], accent, s);
+      var fd=(idx*0.55).toFixed(2);
+      world+='<g class="bld prop3d" id="rp'+idx+'" data-room-go="'+idx+'" style="--fd:'+fd+'s">'
+        + sh.shadow + '<g class="prop-body">'+sh.body+'</g></g>';
+      var lbl = s.pillars ? '5-Pillar Strategy' : (SHORT[s.prop]||('Session '+(idx+1)));
       markers+='<g class="marker prop-marker" id="rmk'+idx+'" data-room-go="'+idx+'" transform="translate('+sh.mx.toFixed(1)+','+sh.my.toFixed(1)+')">'
         +'<circle class="ring" r="17"/>'
         +'<circle class="p-badge" r="17" fill="'+accent+'"/>'
@@ -1580,16 +1793,26 @@
   }
 
   function showRoomCallout(i){
-    var s=LOC[currentLoc].sessions[i];
-    rChip.textContent=('0'+(i+1)).slice(-2);
-    rPlace.textContent=LOC[currentLoc].venue||LOC[currentLoc].name;
+    var loc=LOC[currentLoc], ss=loc.sessions, s=ss[i], n=ss.length;
+    rChip.textContent=(i+1);
+    rPlace.textContent=loc.venue||loc.name;
     rTitle.textContent=s.t;
-    if(s.sub && s.sub.length){
+    rTime.textContent=s.time||'Time TBA';
+    rSpeaker.innerHTML='Speaker · <b>'+(s.speaker||'Speaker TBA')+'</b>';
+    if(s.pillars){
+      rNote.textContent='TCS 5-pillar transformation strategy';
+      rTags.style.display=''; rTags.innerHTML=['I','II','III','IV','V'].map(function(t){return '<span class="tag">Pillar '+t+'</span>';}).join('');
+    } else if(s.sub && s.sub.length){
       rNote.textContent='Focus areas';
       rTags.style.display=''; rTags.innerHTML=s.sub.map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
     } else {
-      rNote.textContent='Session in this room'; rTags.style.display='none'; rTags.innerHTML='';
+      rNote.textContent='Session in this room';
+      rTags.style.display='none'; rTags.innerHTML='';
     }
+    var navRow=rPrev.closest('.callout-nav'); if(navRow) navRow.style.display=(n>1?'':'none');
+    rCount.textContent=(i+1)+' / '+('0'+n).slice(-2);
+    rPrev.disabled=(i===0);
+    rNext.textContent=(i<n-1)?'Next ›':'Back to first ›';
     roomCallout.hidden=false; roomCallout.classList.remove('show'); void roomCallout.offsetWidth; roomCallout.classList.add('show');
   }
   function hideRoomCallout(){ roomCallout.hidden=true; roomCallout.classList.remove('show'); }
@@ -1643,6 +1866,29 @@
   document.getElementById('interiorExit').addEventListener('click', exitInterior);
   document.getElementById('roomOverview').addEventListener('click', roomOverview);
   document.getElementById('roomCalloutClose').addEventListener('click', roomOverview);
+  rPrev.addEventListener('click', function(){ if(roomActive>0) roomSelect(roomActive-1); });
+  rNext.addEventListener('click', function(){
+    var n=(LOC[currentLoc].sessions||[]).length;
+    roomSelect(roomActive<n-1 ? roomActive+1 : 0);
+  });
+
+  // floating contact / info icons inside the interior (same reveal behaviour as the map rail)
+  var intRailItems = Array.prototype.slice.call(document.querySelectorAll('.interior-rail .rail-item'));
+  intRailItems.forEach(function(item){
+    var btn=item.querySelector('.rail-icon'); if(!btn) return;
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var willOpen=!item.classList.contains('open');
+      intRailItems.forEach(function(o){ var ob=o.querySelector('.rail-icon');
+        o.classList.toggle('open', o===item && willOpen);
+        if(ob) ob.setAttribute('aria-expanded', (o===item && willOpen)?'true':'false'); });
+    });
+  });
+  document.addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('.interior-rail .rail-item')) return;
+    intRailItems.forEach(function(item){ item.classList.remove('open');
+      var b=item.querySelector('.rail-icon'); if(b) b.setAttribute('aria-expanded','false'); });
+  });
   roomEl.addEventListener('click', function(e){
     var g=e.target.closest('[data-room-go]');
     if(g) roomSelect(parseInt(g.getAttribute('data-room-go'),10));
