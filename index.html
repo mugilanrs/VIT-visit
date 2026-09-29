@@ -1780,7 +1780,7 @@
   }
 
   function buildRoom(i){
-    var l=LOC[i], ss=l.sessions||[], n=ss.length, conf=(l.type==='board');
+    var l=LOC[i], ss=l.sessions||[], n=ss.length, conf=(l.type==='board'), dining=(l.type==='tower');
     currentLoc=i; roomProps=[]; roomPropEls=[]; roomMkEls=[];
     stopSpin();   // reset any previous room's self-rotating props
     var CX=0, CY=0, spanA=(n>1?3.7:0);
@@ -1792,29 +1792,45 @@
         var th=(-90 + k*(360/n))*Math.PI/180, a=Ra*Math.cos(th), b=Rb*Math.sin(th);
         pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
       }
+    } else if(dining){
+      // single "Strategy & Vision" prop floats as a centrepiece over the banquet table
+      for(k=0;k<n;k++) pos.push([ CX, CY ]);
     } else {
       for(k=0;k<n;k++){
         var la=(k-(n-1)/2)*spanA, lb=(k%2===0?-1:1)*1.45;
         pos.push([ CX+Ex*la+Dx*lb, CY+Ey*la+Dy*lb ]);
       }
     }
-    var world='', WH=3.4, FA=Math.max(6, (conf?7.8:spanA*(n-1)/2) + 3.2), FB=conf?9.2:6.5;
+    var world='', WH=3.6, FA=Math.max(6, (conf?7.8:(dining?8.2:spanA*(n-1)/2)) + 3.2), FB=conf?9.2:(dining?7.2:6.5);
     function wp(a,b,up){ return [CX+Ex*a+Dx*b+Ux*up, CY+Ey*a+Dy*b+Uy*up]; }
     // ---- shell: back walls (north + west), floor, grid ----
     world+='<polygon class="room-wall-r" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';
     world+='<polygon class="room-wall-l" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)])+'"/>';
     world+='<polygon class="room-floor-fill" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,FB,0),wp(-FA,FB,0)])+'"/>';
-    // baseboards along both wall/floor junctions
-    world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
-    world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
-    // floor grid
-    var ga,gb;
-    for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
-    for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
-    // a centred rug under the table / props
-    var ra=conf?7.6:Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=conf?6.0:Math.min(FB-1.2, 3.2);
-    world+='<polygon class="room-rug" fill="var(--soft)" points="'+pstr([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0)])+'"/>';
-    world+=line([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0),wp(-ra,-rb,0)],'room-panel-edge');
+    if(dining){
+      // ---- modern corporate shell: warm neutral back wall, walnut feature wall (west), wood floor + wool rug ----
+      world+='<polygon fill="#2a2f39" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';   // dark backing behind the glass wall
+      world+='<polygon fill="#c9c0b2" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)])+'"/>';         // west wall base
+      // warm wood floor with fine plank lines
+      world+='<polygon fill="#a9885c" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,FB,0),wp(-FA,FB,0)])+'"/>';
+      var pqa; for(pqa=-FA+1.3; pqa<FA; pqa+=1.3){ world+='<polyline points="'+pstr([wp(pqa,-FB,0),wp(pqa,FB,0)])+'" fill="none" stroke="#916d45" stroke-width="1" opacity="0.8"/>'; }
+      // large neutral wool rug under the table
+      var rga=8.2, rgb=4.4;
+      world+='<polygon fill="#cfc6b5" points="'+pstr([wp(-rga,-rgb,0.01),wp(rga,-rgb,0.01),wp(rga,rgb,0.01),wp(-rga,rgb,0.01)])+'"/>';
+      world+='<polyline points="'+pstr([wp(-rga+0.5,-rgb+0.5,0.02),wp(rga-0.5,-rgb+0.5,0.02),wp(rga-0.5,rgb-0.5,0.02),wp(-rga+0.5,rgb-0.5,0.02),wp(-rga+0.5,-rgb+0.5,0.02)])+'" fill="none" stroke="#b3a88f" stroke-width="2" opacity="0.8"/>';
+    } else {
+      // baseboards along both wall/floor junctions
+      world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
+      world+='<polygon class="room-base" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,0.22),wp(-FA,-FB,0.22)])+'"/>';
+      // floor grid
+      var ga,gb;
+      for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
+      for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
+      // a centred rug under the table / props
+      var ra=conf?7.6:Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=conf?6.0:Math.min(FB-1.2, 3.2);
+      world+='<polygon class="room-rug" fill="var(--soft)" points="'+pstr([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0)])+'"/>';
+      world+=line([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0),wp(-ra,-rb,0)],'room-panel-edge');
+    }
     // ---- back-wall dressing ----
     function edgeRect(a0,a1,u0,u1,cls){ return line([wp(a0,-FB,u0),wp(a1,-FB,u0),wp(a1,-FB,u1),wp(a0,-FB,u1),wp(a0,-FB,u0)],cls||'room-panel-edge'); }
     if(l.type==='board'){
@@ -1857,36 +1873,59 @@
       world+='<polyline points="'+pstr([wp(bx0+2.6,-FB,2.3),wp(bx0+3.4,-FB,1.5),wp(bx0+2.9,-FB,1.5)])+'" fill="none" stroke="var(--deep)" stroke-width="2.2" opacity="0.6"/>';
       // board tray
       world+=line([wp(bx0,-FB,bu0-0.06),wp(bx1,-FB,bu0-0.06)],'room-wall-edge');
+    } else if(dining){
+      // ---- floor-to-ceiling glass wall with a dusk CITY SKYLINE (executive view) ----
+      function nrect(a0,a1,u0,u1,fill,op){ return '<polygon fill="'+fill+'" points="'+pstr([wp(a0,-FB,u0),wp(a1,-FB,u0),wp(a1,-FB,u1),wp(a0,-FB,u1)])+'"'+(op?' opacity="'+op+'"':'')+'/>'; }
+      var gx0=-FA+0.5, gx1=FA-0.5, gu0=0.12, gu1=WH-0.12;
+      // dusk sky, three bands
+      world+=nrect(gx0,gx1,gu0+(gu1-gu0)*0.55,gu1,'#2f3f66');              // upper (blue)
+      world+=nrect(gx0,gx1,gu0+(gu1-gu0)*0.28,gu0+(gu1-gu0)*0.6,'#7a5f8a'); // mid (violet)
+      world+=nrect(gx0,gx1,gu0,gu0+(gu1-gu0)*0.32,'#d59158');              // low (warm dusk)
+      // distant skyline silhouette + a few lit windows
+      var bx, seed=7, base=gu0+(gu1-gu0)*0.12;
+      for(bx=gx0+0.3; bx<gx1-0.6; bx+=0.9){
+        seed=(seed*1103515245+12345)&0x7fffffff; var hh=0.7+((seed>>8)%100)/100*1.4;
+        var bw=0.55+((seed>>4)%40)/100;
+        world+=nrect(bx,bx+bw, base, base+hh, '#20293f', 0.95);
+        // lit windows
+        var wy; for(wy=base+0.15; wy<base+hh-0.15; wy+=0.28){ if(((seed>>(wy*7&15))&3)!==0){ var lw=wp(bx+bw*0.35,-FB,wy); world+='<rect x="'+lw[0].toFixed(1)+'" y="'+(lw[1]-3).toFixed(1)+'" width="3.2" height="3.2" fill="#ffd98a" opacity="0.85"/>'; } }
+      }
+      // slim vertical mullions dividing the glass into panels + subtle reflections
+      var mx; for(mx=gx0; mx<=gx1+0.01; mx+=2.4){ world+='<polyline points="'+pstr([wp(mx,-FB,gu0),wp(mx,-FB,gu1)])+'" fill="none" stroke="#3a4152" stroke-width="2.5"/>'; }
+      world+='<polyline points="'+pstr([wp(gx0,-FB,gu0+(gu1-gu0)*0.5),wp(gx1,-FB,gu0+(gu1-gu0)*0.5)])+'" fill="none" stroke="#3a4152" stroke-width="2"/>';
+      world+='<polyline points="'+pstr([wp(gx0,-FB,gu0),wp(gx1,-FB,gu0),wp(gx1,-FB,gu1),wp(gx0,-FB,gu1),wp(gx0,-FB,gu0)])+'" fill="none" stroke="#4a5266" stroke-width="3"/>';
     } else {
       // a presentation screen on the back wall for the other rooms
       world+='<polygon fill="var(--ink)" opacity="0.82" points="'+pstr([wp(-3.1,-FB,1.15),wp(3.1,-FB,1.15),wp(3.1,-FB,2.75),wp(-3.1,-FB,2.75)])+'"/>';
       world+=edgeRect(-3.1,3.1,1.15,2.75);
     }
-    // framed panels on the side (west) wall — every room
-    world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6)])+'"/>';
-    world+=line([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6),wp(-FA,-2.4,1.2)],'room-panel-edge');
-    world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6)])+'"/>';
-    world+=line([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6),wp(-FA,1.0,1.2)],'room-panel-edge');
-    // top edges of the walls
-    world+=line([wp(-FA,-FB,WH),wp(FA,-FB,WH)],'room-wall-edge');
-    world+=line([wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)],'room-wall-edge');
-    // pendant lamps hanging over the room
-    var lampA=[-3.4,0,3.4], li;
-    for(li=0; li<lampA.length; li++){
-      var top=wp(lampA[li],-1.5,WH+1.6), bot=wp(lampA[li],-1.5,WH+0.5);
-      world+=line([top,bot],'room-lamp-cord');
-      world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+bot[1].toFixed(1)+'" r="7" fill="var(--pink)" opacity="0.85"/>';
-      world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+(bot[1]-1).toFixed(1)+'" r="3.4" fill="#fff" opacity="0.7"/>';
+    if(!dining){
+      // framed panels on the side (west) wall — non-dining rooms
+      world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6)])+'"/>';
+      world+=line([wp(-FA,-2.4,1.2),wp(-FA,-0.4,1.2),wp(-FA,-0.4,2.6),wp(-FA,-2.4,2.6),wp(-FA,-2.4,1.2)],'room-panel-edge');
+      world+='<polygon class="room-panel-l" points="'+pstr([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6)])+'"/>';
+      world+=line([wp(-FA,1.0,1.2),wp(-FA,3.0,1.2),wp(-FA,3.0,2.6),wp(-FA,1.0,2.6),wp(-FA,1.0,1.2)],'room-panel-edge');
+      // top edges of the walls
+      world+=line([wp(-FA,-FB,WH),wp(FA,-FB,WH)],'room-wall-edge');
+      world+=line([wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)],'room-wall-edge');
+      // pendant lamps hanging over the room
+      var lampA=[-3.4,0,3.4], li;
+      for(li=0; li<lampA.length; li++){
+        var top=wp(lampA[li],-1.5,WH+1.6), bot=wp(lampA[li],-1.5,WH+0.5);
+        world+=line([top,bot],'room-lamp-cord');
+        world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+bot[1].toFixed(1)+'" r="7" fill="var(--pink)" opacity="0.85"/>';
+        world+='<circle cx="'+bot[0].toFixed(1)+'" cy="'+(bot[1]-1).toFixed(1)+'" r="3.4" fill="#fff" opacity="0.7"/>';
+      }
+      // two potted plants in the back corners
+      var plant=function(pa,pb){
+        var g='', pw=0.7, ph=0.75, q=propQ(wp(pa,pb,0)[0], wp(pa,pb,0)[1], pw,pw,0);
+        g+=isoBox(q,pw,pw,ph)+accentTop(q,pw,pw,ph,'#1fa971',0.3);
+        var c=q(pw/2,pw/2,ph)[0], cy2=q(pw/2,pw/2,ph)[1];
+        g+='<ellipse cx="'+c.toFixed(1)+'" cy="'+(cy2-S*0.7).toFixed(1)+'" rx="'+(S*0.5).toFixed(1)+'" ry="'+(S*0.62).toFixed(1)+'" fill="#1fa971" opacity="0.85"/>';
+        return g;
+      };
+      world+='<g class="bld">'+plant(-FA+1.3,-FB+1.3)+plant(FA-1.3,-FB+1.3)+'</g>';
     }
-    // two potted plants in the back corners
-    function plant(pa,pb){
-      var g='', pw=0.7, ph=0.75, q=propQ(wp(pa,pb,0)[0], wp(pa,pb,0)[1], pw,pw,0);
-      g+=isoBox(q,pw,pw,ph)+accentTop(q,pw,pw,ph,'#1fa971',0.3);
-      var c=q(pw/2,pw/2,ph)[0], cy2=q(pw/2,pw/2,ph)[1];
-      g+='<ellipse cx="'+c.toFixed(1)+'" cy="'+(cy2-S*0.7).toFixed(1)+'" rx="'+(S*0.5).toFixed(1)+'" ry="'+(S*0.62).toFixed(1)+'" fill="#1fa971" opacity="0.85"/>';
-      return g;
-    }
-    world+='<g class="bld">'+plant(-FA+1.3,-FB+1.3)+plant(FA-1.3,-FB+1.3)+'</g>';
 
     // ---- conference table + chairs (Board Room) ----
     if(conf){
@@ -1935,6 +1974,88 @@
       world+='<g class="bld">'+backChairs+tbl+frontChairs+'</g>';
     }
 
+    // ---- CORPORATE DINING ROOM: walnut table, executive leather chairs, settings, pendants, credenza ----
+    if(dining){
+      var dbox=function(a0,b0,w,d,h,up0,color){ var q=function(la,lb,lu){ return wp(a0+la,b0+lb,up0+lu); }; return accentBoxSolid(q,w,d,h,color); };
+      var DTH=1.0, DTA=6.6, DTB=1.6;                    // table: height, half-length, half-depth
+      var TTOP='#43301f', TBASE='#2f2013', LEATHER='#a97b4b', LEATHERHI='#bf9160', METAL='#2c2e33', RUNNER='#cabfa2', GREEN='#3f7a52';
+      // executive leather chair (mid-back, metal legs)
+      var execChair=function(ca,cb){
+        var seatH=0.48, cs2=0.74, lg=0.09, bh=1.02;
+        var behind=(Math.abs(cb)>=Math.abs(ca))?(cb<0):(ca<0), back;
+        if(Math.abs(cb)>=Math.abs(ca)){ var bb=cb<0?cb-cs2/2:cb+cs2/2-0.14; back=dbox(ca-cs2/2,bb,cs2,0.14,bh,seatH+0.16,LEATHER)+dbox(ca-cs2/2+0.06,bb+0.02,cs2-0.12,0.09,bh-0.18,seatH+0.24,LEATHERHI); }
+        else { var ba=ca<0?ca-cs2/2:ca+cs2/2-0.14; back=dbox(ba,cb-cs2/2,0.14,cs2,bh,seatH+0.16,LEATHER)+dbox(ba+0.02,cb-cs2/2+0.06,0.09,cs2-0.12,bh-0.18,seatH+0.24,LEATHERHI); }
+        var g='';
+        [[ca-cs2/2+0.05,cb-cs2/2+0.05],[ca+cs2/2-0.14,cb-cs2/2+0.05],[ca-cs2/2+0.05,cb+cs2/2-0.14],[ca+cs2/2-0.14,cb+cs2/2-0.14]]
+          .forEach(function(p){ g+=dbox(p[0],p[1],lg,lg,seatH,0,METAL); });
+        g+=dbox(ca-cs2/2,cb-cs2/2,cs2,cs2,0.17,seatH,LEATHER);
+        g+=dbox(ca-cs2/2+0.06,cb-cs2/2+0.06,cs2-0.12,cs2-0.12,0.06,seatH+0.17,LEATHERHI);
+        return behind ? (back+g) : (g+back);
+      };
+      // modern place setting: white plate, wine + water glass, cutlery
+      var setting=function(a,b){
+        var c=wp(a,b,DTH+0.21), g='';
+        g+='<ellipse cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" rx="'+(S*0.5).toFixed(1)+'" ry="'+(S*0.28).toFixed(1)+'" fill="#fbfbf9" stroke="#c7c7c2" stroke-width="1.6"/>';
+        g+='<ellipse cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" rx="'+(S*0.3).toFixed(1)+'" ry="'+(S*0.16).toFixed(1)+'" fill="none" stroke="#dedeD9" stroke-width="1.1"/>';
+        var s2=b<0?1:-1, w1=wp(a-0.16,b+s2*0.5,DTH+0.21), w2=wp(a+0.14,b+s2*0.55,DTH+0.21);
+        g+='<ellipse cx="'+w1[0].toFixed(1)+'" cy="'+(w1[1]-11).toFixed(1)+'" rx="4" ry="5.5" fill="#e7c9d0" opacity="0.7" stroke="#c99aa6" stroke-width="1"/><rect x="'+(w1[0]-0.8).toFixed(1)+'" y="'+(w1[1]-5).toFixed(1)+'" width="1.6" height="5" fill="#c99aa6"/>';
+        g+='<ellipse cx="'+w2[0].toFixed(1)+'" cy="'+(w2[1]-8).toFixed(1)+'" rx="3.4" ry="4.8" fill="#cfe3f5" opacity="0.78" stroke="#a9c6e4" stroke-width="1"/>';
+        var lf=wp(a-0.6,b,DTH+0.21), rt=wp(a+0.6,b,DTH+0.21);
+        g+='<line x1="'+lf[0].toFixed(1)+'" y1="'+(lf[1]-7).toFixed(1)+'" x2="'+lf[0].toFixed(1)+'" y2="'+(lf[1]+7).toFixed(1)+'" stroke="#b9bcc2" stroke-width="2"/>';
+        g+='<line x1="'+rt[0].toFixed(1)+'" y1="'+(rt[1]-7).toFixed(1)+'" x2="'+rt[0].toFixed(1)+'" y2="'+(rt[1]+7).toFixed(1)+'" stroke="#b9bcc2" stroke-width="2"/>';
+        return g;
+      };
+      // matte-black pendant light with a warm glow
+      var pendant=function(a){
+        var top=wp(a,0,WH+1.6), g='';
+        g+='<line x1="'+top[0].toFixed(1)+'" y1="'+top[1].toFixed(1)+'" x2="'+wp(a,0,WH-0.1)[0].toFixed(1)+'" y2="'+wp(a,0,WH-0.1)[1].toFixed(1)+'" stroke="'+METAL+'" stroke-width="2"/>';
+        g+=dbox(a-0.16,-0.16,0.32,0.32,0.5,WH-0.6,METAL);
+        var lb=wp(a,0,WH-0.6); g+='<ellipse cx="'+lb[0].toFixed(1)+'" cy="'+lb[1].toFixed(1)+'" rx="'+(S*0.3).toFixed(1)+'" ry="'+(S*0.14).toFixed(1)+'" fill="#ffdf9e"/><ellipse cx="'+lb[0].toFixed(1)+'" cy="'+lb[1].toFixed(1)+'" rx="'+(S*0.55).toFixed(1)+'" ry="'+(S*0.26).toFixed(1)+'" fill="#ffdf9e" opacity="0.18"/>';
+        return g;
+      };
+
+      // west wall: walnut slat feature wall + a modern abstract artwork
+      function wrect(b0,b1,u0,u1,fill){ return '<polygon fill="'+fill+'" points="'+pstr([wp(-FA,b0,u0),wp(-FA,b1,u0),wp(-FA,b1,u1),wp(-FA,b0,u1)])+'"/>'; }
+      var west=wrect(-FB,FB,0,WH,'#5b3f27'); var wb2;
+      for(wb2=-FB+0.45; wb2<FB; wb2+=0.45){ west+='<polyline points="'+pstr([wp(-FA,wb2,0.24),wp(-FA,wb2,WH-0.1)])+'" fill="none" stroke="#4a3220" stroke-width="1.6" opacity="0.85"/>'; }
+      west+=wrect(-2.3,0.3,1.4,2.7,'#20242c');                                  // art canvas (dark)
+      west+=wrect(-2.05,-0.55,1.6,2.5,'#c98a5a')+wrect(-1.7,0.05,1.55,2.15,'#4a6b8a')+wrect(-1.2,-0.2,1.9,2.55,'#c9b24a');   // abstract blocks
+      west+='<polyline points="'+pstr([wp(-FA,-2.3,1.4),wp(-FA,0.3,1.4),wp(-FA,0.3,2.7),wp(-FA,-2.3,2.7),wp(-FA,-2.3,1.4)])+'" fill="none" stroke="#0f1216" stroke-width="2.5"/>';
+      world+=west;
+      // credenza (low cabinet) against the west wall + decor
+      var cred=dbox(-FA,-3.1,0.8,4.2,0.95,0,'#3a2718');
+      cred+='<polyline points="'+pstr([wp(-FA+0.8,-1.0,0.1),wp(-FA+0.8,-1.0,0.9)])+'" fill="none" stroke="#241810" stroke-width="1.5"/><polyline points="'+pstr([wp(-FA+0.8,0.9,0.1),wp(-FA+0.8,0.9,0.9)])+'" fill="none" stroke="#241810" stroke-width="1.5"/>';
+      var cv=wp(-FA+0.4,-2.2,0.95); cred+='<rect x="'+(cv[0]-3).toFixed(1)+'" y="'+(cv[1]-22).toFixed(1)+'" width="6" height="22" fill="#8a9aa6"/><ellipse cx="'+cv[0].toFixed(1)+'" cy="'+(cv[1]-24).toFixed(1)+'" rx="5" ry="4" fill="#3f7a52"/>';   // vase + sprig
+      var cb2=wp(-FA+0.42,1.5,0.95); cred+='<ellipse cx="'+cb2[0].toFixed(1)+'" cy="'+cb2[1].toFixed(1)+'" rx="9" ry="5" fill="#c9b24a" opacity="0.9"/>';   // brass bowl
+      world+='<g class="bld">'+cred+'</g>';
+      // a tall modern plant in the front-right corner
+      var potp=wp(FA-1.4,FB-1.2,0), plant2=dbox(FA-1.7,FB-1.5,0.6,0.6,0.7,0,'#2f333a');
+      plant2+='<ellipse cx="'+potp[0].toFixed(1)+'" cy="'+(potp[1]-S*1.4).toFixed(1)+'" rx="'+(S*0.7).toFixed(1)+'" ry="'+(S*1.0).toFixed(1)+'" fill="#3f7a52"/><ellipse cx="'+(potp[0]-10).toFixed(1)+'" cy="'+(potp[1]-S*1.0).toFixed(1)+'" rx="'+(S*0.4).toFixed(1)+'" ry="'+(S*0.7).toFixed(1)+'" fill="#4f9068"/>';
+      world+='<g class="bld">'+plant2+'</g>';
+
+      // the walnut table: two panel legs + stretcher + thick top with sheen + neutral runner
+      var dtbl='';
+      [-DTA+1.5, DTA-1.5].forEach(function(la){ dtbl+=dbox(la-0.18,-DTB+0.55,0.36,2*DTB-1.1,DTH-0.18,0,TBASE); });
+      dtbl+=dbox(-DTA+1.5,-0.18,2*DTA-3.0,0.36,0.3,0.22,TBASE);                   // stretcher
+      dtbl+=dbox(-DTA,-DTB,2*DTA,2*DTB,0.2,DTH,TTOP);                             // top
+      dtbl+='<polygon fill="#5f4630" opacity="0.55" points="'+pstr([wp(-DTA+0.3,-DTB+0.35,DTH+0.201),wp(DTA-0.3,-DTB+0.35,DTH+0.201),wp(DTA-0.3,-DTB+0.75,DTH+0.201),wp(-DTA+0.3,-DTB+0.75,DTH+0.201)])+'"/>';  // sheen
+      dtbl+='<polygon fill="'+RUNNER+'" points="'+pstr([wp(-DTA+0.6,-0.42,DTH+0.202),wp(DTA-0.6,-0.42,DTH+0.202),wp(DTA-0.6,0.42,DTH+0.202),wp(-DTA+0.6,0.42,DTH+0.202)])+'"/>';   // runner
+      // low planter centrepieces
+      var tabletop='';
+      [-3.6,0,3.6].forEach(function(a){
+        tabletop+=dbox(a-0.42,-0.26,0.84,0.52,0.24,DTH+0.2,'#2f333a');
+        var gp=wp(a,0,DTH+0.44); tabletop+='<ellipse cx="'+gp[0].toFixed(1)+'" cy="'+(gp[1]-6).toFixed(1)+'" rx="'+(S*0.6).toFixed(1)+'" ry="'+(S*0.3).toFixed(1)+'" fill="'+GREEN+'"/><ellipse cx="'+(gp[0]-9).toFixed(1)+'" cy="'+(gp[1]-2).toFixed(1)+'" rx="'+(S*0.34).toFixed(1)+'" ry="'+(S*0.2).toFixed(1)+'" fill="#4f9068"/>';
+      });
+      var seatAs=[-5.0,-3.0,-1.0,1.0,3.0,5.0];
+      seatAs.forEach(function(a){ tabletop+=setting(a,-DTB+0.55)+setting(a,DTB-0.55); });
+      // chairs: back row + left head behind; front row + right head in front
+      var dback='', dfront='';
+      seatAs.forEach(function(a){ dback+=execChair(a,-DTB-0.72); dfront+=execChair(a,DTB+0.72); });
+      var headL=execChair(-DTA-0.78,0), headR=execChair(DTA+0.78,0);
+      var pend=pendant(-3.6)+pendant(0)+pendant(3.6);
+      world+='<g class="bld">'+dback+headL+dtbl+tabletop+dfront+headR+pend+'</g>';
+    }
+
     // ---- props, painter-sorted back→front; shadows grounded, bodies float ----
     var order=[]; for(k=0;k<n;k++) order.push(k);
     order.sort(function(A,B){ return pos[A][1]-pos[B][1]; });
@@ -1943,18 +2064,33 @@
       var s=ss[idx], accent=ACCENT[s.prop]||ACCENT['default'];
       var sh = drawShape(s.prop, pos[idx][0], pos[idx][1], accent, s);
       var fd=(idx*0.55).toFixed(2);
-      var inner = sh.body;
-      if(sh.spin){ inner='<g id="rprot'+idx+'">'+sh.body+'</g>'; spinners.push({ id:'rprot'+idx, draw:sh.spin.draw, spd:sh.spin.spd }); }
-      world+='<g class="bld prop3d" id="rp'+idx+'" data-room-go="'+idx+'" style="--fd:'+fd+'s">'
-        + sh.shadow + '<g class="prop-body">'+inner+'</g></g>';
+      var mkx=sh.mx, mky=sh.my, emblem=EMBLEM[s.prop]||EMBLEM['default'];
+      if(dining){
+        // no floating centrepiece — just a discreet, clickable "view session" marker above the table
+        var mp=wp(0,0,WH-0.2); mkx=mp[0]; mky=mp[1];
+        emblem='<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/>';
+        world+='<g class="prop3d" id="rp'+idx+'" data-room-go="'+idx+'"></g>';
+      } else {
+        var inner = sh.body;
+        if(sh.spin){ inner='<g id="rprot'+idx+'">'+sh.body+'</g>'; spinners.push({ id:'rprot'+idx, draw:sh.spin.draw, spd:sh.spin.spd }); }
+        world+='<g class="bld prop3d" id="rp'+idx+'" data-room-go="'+idx+'" style="--fd:'+fd+'s">'
+          + sh.shadow + '<g class="prop-body">'+inner+'</g></g>';
+      }
       var lbl = s.pillars ? '5-Pillar Strategy' : (SHORT[s.prop]||('Session '+(idx+1)));
-      markers+='<g class="marker prop-marker" id="rmk'+idx+'" data-room-go="'+idx+'" transform="translate('+sh.mx.toFixed(1)+','+sh.my.toFixed(1)+')">'
+      markers+='<g class="marker prop-marker" id="rmk'+idx+'" data-room-go="'+idx+'" transform="translate('+mkx.toFixed(1)+','+mky.toFixed(1)+')">'
         +'<circle class="ring" r="17"/>'
         +'<circle class="p-badge" r="17" fill="'+accent+'"/>'
-        +'<g class="p-emblem-ic" stroke="#fff" transform="translate(-10.5,-10.5) scale(0.875)">'+(EMBLEM[s.prop]||EMBLEM['default'])+'</g>'
+        +'<g class="p-emblem-ic" stroke="#fff" transform="translate(-10.5,-10.5) scale(0.875)">'+emblem+'</g>'
         +'<text class="lbl" y="-28">'+lbl+'</text></g>';
-      roomProps[idx]={ x:pos[idx][0], y:pos[idx][1], mx:sh.mx, my:sh.my };
+      roomProps[idx]={ x:pos[idx][0], y:pos[idx][1], mx:mkx, my:mky };
     });
+    // phantom bound-points so Overview frames the whole dining hall, not just the centrepiece
+    if(dining){
+      var c1=wp(-9.5,-5.5,0), c2=wp(9.5,5.5,0), c3=wp(0,0,WH+2.6);
+      roomProps.push({x:c1[0],y:c1[1],mx:c1[0],my:c1[1]});
+      roomProps.push({x:c2[0],y:c2[1],mx:c2[0],my:c2[1]});
+      roomProps.push({x:c3[0],y:c3[1],mx:c3[0],my:c3[1]});
+    }
     roomCam.innerHTML = world + markers;
     for(k=0;k<n;k++){ roomPropEls[k]=document.getElementById('rp'+k); roomMkEls[k]=document.getElementById('rmk'+k); }
     startSpin();   // start any self-rotating props in this room
