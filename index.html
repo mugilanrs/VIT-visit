@@ -512,6 +512,19 @@
     border:0; border-radius:999px; padding:6px 12px; cursor:pointer; }
   .rail-chip:hover { background:var(--pink); color:#fff; }
 
+  /* left rail: round icon buttons that reveal detail cards on click */
+  .rail-item { position:relative; pointer-events:auto; }
+  .rail-icon { width:52px; height:52px; border-radius:50%; border:1px solid var(--line);
+    background:var(--card); box-shadow:var(--shadow); color:var(--deep); cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:background .18s ease, color .18s ease, transform .18s ease; }
+  .rail-icon:hover { background:var(--soft); transform:translateY(-1px); }
+  .rail-item.open .rail-icon { background:var(--pink); color:#fff; border-color:var(--pink); }
+  .rail-pop { position:absolute; top:0; left:64px; width:214px; z-index:6;
+    opacity:0; visibility:hidden; transform:translateX(-6px);
+    transition:opacity .2s ease, transform .2s ease, visibility .2s; }
+  .rail-item.open .rail-pop { opacity:1; visibility:visible; transform:translateX(0); }
+
   /* rails behave as fixed side panels on desktop */
   .railwrap { display:contents; }
   .menu-btn, .sheet-head, .sheet-backdrop { display:none; }
@@ -519,6 +532,10 @@
   /* ===== tablet / mobile: rails fold into a slide-up sheet ===== */
   @media (max-width:1160px){
     .rail-left, .rail-right { position:static; transform:none; width:auto; left:auto; right:auto; }
+    /* inside the slide-up sheet: show full cards, not the round icons */
+    .rail-icon { display:none; }
+    .rail-item { position:static; }
+    .rail-pop { position:static; width:auto; opacity:1; visibility:visible; transform:none; }
     .railwrap { display:flex; flex-direction:column; gap:12px; position:fixed; left:0; right:0; bottom:0; z-index:14;
       max-height:84vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
       background:var(--paper); border-radius:22px 22px 0 0;
@@ -597,22 +614,32 @@
   <div class="railwrap" id="railwrap">
   <div class="sheet-head"><b>Info &amp; options</b><button class="sheet-close" id="sheetClose" aria-label="Close">×</button></div>
   <aside class="rail rail-left" aria-label="Event information">
-    <div class="rail-card">
-      <p class="rail-eyebrow">The Event</p>
-      <h3>Annual Company Day</h3>
-      <ul class="rail-list">
-        <li><span>When</span><b>Fri, 14 Nov 2026</b></li>
-        <li><span>Where</span><b>Main Campus</b></li>
-        <li><span>Doors</span><b>08:30 onwards</b></li>
-      </ul>
+    <div class="rail-item" id="railItemEvent">
+      <button class="rail-icon" aria-expanded="false" aria-controls="railPopEvent" aria-label="The Event">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></svg>
+      </button>
+      <div class="rail-card rail-pop" id="railPopEvent" role="region" aria-label="The Event details">
+        <p class="rail-eyebrow">The Event</p>
+        <h3>Annual Company Day</h3>
+        <ul class="rail-list">
+          <li><span>When</span><b>Fri, 14 Nov 2026</b></li>
+          <li><span>Where</span><b>Main Campus</b></li>
+          <li><span>Doors</span><b>08:30 onwards</b></li>
+        </ul>
+      </div>
     </div>
-    <div class="rail-card">
-      <p class="rail-eyebrow">Contacts</p>
-      <ul class="rail-list">
-        <li><span>Event desk</span><b>+91 90000 00000</b></li>
-        <li><span>RSVP</span><b>rsvp@company.com</b></li>
-        <li><span>Help</span><b>help@company.com</b></li>
-      </ul>
+    <div class="rail-item" id="railItemContacts">
+      <button class="rail-icon" aria-expanded="false" aria-controls="railPopContacts" aria-label="Contacts">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5c0-.8.7-1.5 1.5-1.5H8l1.5 4-2 1.2a12 12 0 0 0 5.8 5.8l1.2-2 4 1.5v2.5c0 .8-.7 1.5-1.5 1.5A15.5 15.5 0 0 1 4 5.5z"/></svg>
+      </button>
+      <div class="rail-card rail-pop" id="railPopContacts" role="region" aria-label="Contacts details">
+        <p class="rail-eyebrow">Contacts</p>
+        <ul class="rail-list">
+          <li><span>Event desk</span><b>+91 90000 00000</b></li>
+          <li><span>RSVP</span><b>rsvp@company.com</b></li>
+          <li><span>Help</span><b>help@company.com</b></li>
+        </ul>
+      </div>
     </div>
   </aside>
 
@@ -1297,6 +1324,30 @@
   if(menuBtn) menuBtn.addEventListener('click', function(){ openSheet(!railwrap.classList.contains('open')); });
   if(sheetClose) sheetClose.addEventListener('click', function(){ openSheet(false); });
   if(sheetBackdrop) sheetBackdrop.addEventListener('click', function(){ openSheet(false); });
+
+  // ---- left rail: round icons reveal their detail card on click ----
+  var railItems = Array.prototype.slice.call(document.querySelectorAll('.rail-left .rail-item'));
+  function setRailItem(item, open){
+    item.classList.toggle('open', open);
+    var btn = item.querySelector('.rail-icon');
+    if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  railItems.forEach(function(item){
+    var btn = item.querySelector('.rail-icon');
+    if(!btn) return;
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var willOpen = !item.classList.contains('open');
+      railItems.forEach(function(other){ setRailItem(other, other===item && willOpen); });
+    });
+  });
+  document.addEventListener('click', function(e){
+    if(e.target.closest && e.target.closest('.rail-left .rail-item')) return;
+    railItems.forEach(function(item){ setRailItem(item, false); });
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') railItems.forEach(function(item){ setRailItem(item, false); });
+  });
 
   // ---- intro: clouds part on tap, then fly to the first stop ----
   var intro=document.getElementById('intro'), started=false;
