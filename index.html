@@ -529,10 +529,10 @@
   .room-stage { position:absolute; inset:0; width:100%; height:100%; display:block; }
   #roomCam { transition:transform 1.25s cubic-bezier(.22,.61,.36,1); }
   @media (prefers-reduced-motion:reduce){ #roomCam { transition:none; } }
-  .room-hint { position:absolute; z-index:4; left:50%; transform:translateX(-50%);
-    top:calc(72px + env(safe-area-inset-top,0px)); text-align:center; max-width:min(88vw,560px);
+  .room-hint { position:absolute; z-index:4; right:calc(20px + env(safe-area-inset-right,0px)); left:auto; transform:none;
+    top:calc(20px + env(safe-area-inset-top,0px)); text-align:right; max-width:min(72vw,360px);
     pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
-  .room-hint.gone { opacity:0; transform:translateX(-50%) translateY(-10px); }
+  .room-hint.gone { opacity:0; transform:translateY(-10px); }
   .room-hint .eyebrow { margin:0 0 8px; font-size:11.5px; font-weight:700; letter-spacing:.22em;
     text-transform:uppercase; color:var(--pink); }
   .room-hint h1 { margin:0; font-family:'Bricolage Grotesque',serif; font-weight:800;
@@ -1631,7 +1631,7 @@
 
     // helper: a flat token with depth (back copy, offset down-right) — used for icon-style props
     function poly2(pts,fill,op,extra){ return '<polygon points="'+pstr(pts)+'" fill="'+fill+'" fill-opacity="'+op+'" '+(extra||'')+'/>'; }
-    var Pc=propQ(cx,cy,1,1,FLOAT+1.15)(0.5,0.5,0), Px=Pc[0], Py=Pc[1];   // floating icon centre
+    var Pc=propQ(cx,cy,1,1,FLOAT+0.7)(0.5,0.5,0), Px=Pc[0], Py=Pc[1];   // floating icon centre
     var DX=0.12*S, DY=0.17*S;                                            // depth offset
 
     if(type==='product'){
@@ -1724,7 +1724,7 @@
     var pos=[], k;
     if(conf){
       // the 5 session props float in a ring AROUND a central conference table
-      var Ra=4.6, Rb=3.2;
+      var Ra=6.6, Rb=5.4;
       for(k=0;k<n;k++){
         var th=(-90 + k*(360/n))*Math.PI/180, a=Ra*Math.cos(th), b=Rb*Math.sin(th);
         pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
@@ -1735,7 +1735,7 @@
         pos.push([ CX+Ex*la+Dx*lb, CY+Ey*la+Dy*lb ]);
       }
     }
-    var world='', WH=3.4, FA=Math.max(6, (conf?5.6:spanA*(n-1)/2) + 3.2), FB=conf?7.0:6.5;
+    var world='', WH=3.4, FA=Math.max(6, (conf?7.8:spanA*(n-1)/2) + 3.2), FB=conf?9.2:6.5;
     function wp(a,b,up){ return [CX+Ex*a+Dx*b+Ux*up, CY+Ey*a+Dy*b+Uy*up]; }
     // ---- shell: back walls (north + west), floor, grid ----
     world+='<polygon class="room-wall-r" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';
@@ -1749,20 +1749,41 @@
     for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
     for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
     // a centred rug under the table / props
-    var ra=conf?5.6:Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=conf?4.2:Math.min(FB-1.2, 3.2);
+    var ra=conf?7.6:Math.min(FA-1.4, spanA*(n-1)/2+2.2), rb=conf?6.0:Math.min(FB-1.2, 3.2);
     world+='<polygon class="room-rug" fill="var(--soft)" points="'+pstr([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0)])+'"/>';
     world+=line([wp(-ra,-rb,0),wp(ra,-rb,0),wp(ra,rb,0),wp(-ra,rb,0),wp(-ra,-rb,0)],'room-panel-edge');
     // ---- back-wall dressing ----
     function edgeRect(a0,a1,u0,u1,cls){ return line([wp(a0,-FB,u0),wp(a1,-FB,u0),wp(a1,-FB,u1),wp(a0,-FB,u1),wp(a0,-FB,u0)],cls||'room-panel-edge'); }
     if(l.type==='board'){
-      // a real WINDOW on the back wall (glass + sky + mullions) — it's the Board Room
-      var wx0=-5.4,wx1=-2.0,wu0=1.35,wu1=2.85, wmx=(wx0+wx1)/2, wmu=(wu0+wu1)/2;
-      world+='<polygon fill="#bcd8ff" points="'+pstr([wp(wx0,-FB,wu0),wp(wx1,-FB,wu0),wp(wx1,-FB,wu1),wp(wx0,-FB,wu1)])+'"/>';
-      world+='<polygon fill="#eaf3ff" opacity="0.6" points="'+pstr([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu),wp(wx1,-FB,wu1),wp(wx0,-FB,wu1)])+'"/>';
-      var sun=wp(wx1-0.7,-FB,wu1-0.4); world+='<circle cx="'+sun[0].toFixed(1)+'" cy="'+sun[1].toFixed(1)+'" r="9" fill="#fff2c2" opacity="0.9"/>';
-      world+=line([wp(wmx,-FB,wu0),wp(wmx,-FB,wu1)],'room-panel-edge');
-      world+=line([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu)],'room-panel-edge');
+      // ---- a realistic framed WINDOW on the back wall (frame + panes + sky + clouds + sill) ----
+      var wx0=-5.8,wx1=-1.6,wu0=1.2,wu1=3.0;
+      var wmx1=wx0+(wx1-wx0)/3, wmx2=wx0+2*(wx1-wx0)/3, wmu=(wu0+wu1)/2;
+      // outer frame
+      world+='<polygon fill="#f4f6fb" points="'+pstr([wp(wx0-0.16,-FB,wu0-0.16),wp(wx1+0.16,-FB,wu0-0.16),wp(wx1+0.16,-FB,wu1+0.16),wp(wx0-0.16,-FB,wu1+0.16)])+'"/>';
+      world+=edgeRect(wx0-0.16,wx1+0.16,wu0-0.16,wu1+0.16,'room-wall-edge');
+      // sky — two bands (upper deeper, lower lighter)
+      world+='<polygon fill="#9cc4ff" points="'+pstr([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu),wp(wx1,-FB,wu1),wp(wx0,-FB,wu1)])+'"/>';
+      world+='<polygon fill="#d7e8ff" points="'+pstr([wp(wx0,-FB,wu0),wp(wx1,-FB,wu0),wp(wx1,-FB,wmu),wp(wx0,-FB,wmu)])+'"/>';
+      // sun + clouds
+      var sun=wp(wx1-0.7,-FB,wu1-0.5); world+='<circle cx="'+sun[0].toFixed(1)+'" cy="'+sun[1].toFixed(1)+'" r="11" fill="#ffe38c"/><circle cx="'+sun[0].toFixed(1)+'" cy="'+sun[1].toFixed(1)+'" r="16" fill="#ffe38c" opacity="0.28"/>';
+      function cloudAt(a,u){ var c=wp(a,-FB,u); return '<ellipse cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" rx="15" ry="7.5" fill="#fff" opacity="0.92"/><ellipse cx="'+(c[0]-11).toFixed(1)+'" cy="'+(c[1]+3).toFixed(1)+'" rx="9.5" ry="6" fill="#fff" opacity="0.86"/><ellipse cx="'+(c[0]+12).toFixed(1)+'" cy="'+(c[1]+3).toFixed(1)+'" rx="8.5" ry="5.5" fill="#fff" opacity="0.86"/>'; }
+      world+=cloudAt(wx0+1.1,wu1-0.55)+cloudAt(wmx2+0.1,wmu+0.4);
+      // mullions → 6 panes, then outer glass edge
+      world+=line([wp(wmx1,-FB,wu0),wp(wmx1,-FB,wu1)],'room-wall-edge');
+      world+=line([wp(wmx2,-FB,wu0),wp(wmx2,-FB,wu1)],'room-wall-edge');
+      world+=line([wp(wx0,-FB,wmu),wp(wx1,-FB,wmu)],'room-wall-edge');
       world+=edgeRect(wx0,wx1,wu0,wu1,'room-wall-edge');
+      // windowsill ledge jutting into the room
+      var sA=[wp(wx0-0.18,-FB,wu0-0.16),wp(wx1+0.18,-FB,wu0-0.16),wp(wx1+0.18,-FB+0.32,wu0-0.16),wp(wx0-0.18,-FB+0.32,wu0-0.16)];
+      world+='<polygon fill="#e7ebf3" points="'+pstr(sA)+'"/>'+line([sA[0],sA[1],sA[2],sA[3],sA[0]],'room-wall-edge');
+      // ---- wall-mounted AC unit, high on the left (west) wall ----
+      var acB0=-5.0, acD=2.4, acU0=2.55, acH=0.6, acW=0.55;
+      var acQ=function(la,lb,lu){ return wp(-FA+la, acB0+lb, acU0+lu); };
+      var ac='<g class="bld">'+isoBox(acQ,acW,acD,acH)+accentTop(acQ,acW,acD,acH,'var(--ink)',0.05);
+      var vv; for(vv=0.14; vv<acH-0.05; vv+=0.13){ ac+=line([acQ(acW,0,vv),acQ(acW,acD,vv)],'room-panel-edge'); }
+      ac+=line([acQ(acW,0,0.07),acQ(acW,acD,0.07)],'room-wall-edge');
+      var led=acQ(acW,acD-0.25,0.16); ac+='<circle cx="'+led[0].toFixed(1)+'" cy="'+led[1].toFixed(1)+'" r="2.6" fill="#1fa971"/>';
+      world+=ac+'</g>';
       // a presentation BOARD (whiteboard) on the back wall
       var bx0=1.4,bx1=5.4,bu0=1.2,bu1=2.75;
       world+='<polygon fill="#ffffff" points="'+pstr([wp(bx0,-FB,bu0),wp(bx1,-FB,bu0),wp(bx1,-FB,bu1),wp(bx0,-FB,bu1)])+'"/>';
