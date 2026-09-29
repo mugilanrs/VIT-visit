@@ -1602,10 +1602,10 @@
   }
   // a slim, solid-coloured column that floats on its own (no base, no capital)
   function miniPillar(cx, cy, lift0, accent, roman){
-    var sw=0.5, sh=2.2, qs=propQ(cx,cy,sw,sw,lift0);
+    var sw=0.58, sh=2.7, qs=propQ(cx,cy,sw,sw,lift0);
     var g=accentBox(qs,sw,sw,sh,accent);
     var top=propQ(cx,cy,sw,sw,lift0+sh)(0.5,0.5,0);
-    g += '<text x="'+top[0].toFixed(1)+'" y="'+(top[1]-3).toFixed(1)+'" text-anchor="middle" font-family="Bricolage Grotesque,serif" font-weight="800" font-size="11" fill="#fff">'+roman+'</text>';
+    g += '<text x="'+top[0].toFixed(1)+'" y="'+(top[1]-3).toFixed(1)+'" text-anchor="middle" font-family="Bricolage Grotesque,serif" font-weight="800" font-size="12" fill="#fff">'+roman+'</text>';
     return { g:g, topH:lift0+sh };
   }
 
@@ -1620,8 +1620,8 @@
       // FIVE FLOATING PILLARS — TCS 5-pillar transformation strategy (this session only)
       var romans=['I','II','III','IV','V'], maxTop=FLOAT;
       for(var pi=0; pi<5; pi++){
-        var off=(pi-2)*0.98;                                   // spread along the east axis
-        var px=cx+Ex*off, py=cy+Ey*off, pl=FLOAT+Math.abs(pi-2)*0.16; // slight stagger
+        var off=(pi-2)*1.08;                                   // spread along the east axis
+        var px=cx+Ex*off, py=cy+Ey*off, pl=FLOAT+Math.abs(pi-2)*0.18; // slight stagger
         var mp=miniPillar(px,py,pl,accent,romans[pi]);
         body+=mp.g; if(mp.topH>maxTop) maxTop=mp.topH;
       }
@@ -1629,37 +1629,66 @@
       return { shadow:shadow, body:body, mx:mkP[0], my:mkP[1] };
     }
 
+    // helper: a flat token with depth (back copy, offset down-right) — used for icon-style props
+    function poly2(pts,fill,op,extra){ return '<polygon points="'+pstr(pts)+'" fill="'+fill+'" fill-opacity="'+op+'" '+(extra||'')+'/>'; }
+    var Pc=propQ(cx,cy,1,1,FLOAT+1.15)(0.5,0.5,0), Px=Pc[0], Py=Pc[1];   // floating icon centre
+    var DX=0.12*S, DY=0.17*S;                                            // depth offset
+
     if(type==='product'){
-      // a package cube with a tape cross — product development
-      w=1.35; h=1.2; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
-      var qr=propQ(cx,cy,w,w,lift+h);
-      body+=line([qr(w/2,0,0),qr(w/2,w,0)],'edge')+line([qr(0,w/2,0),qr(w,w/2,0)],'edge');
+      // a wrapped PARCEL (ribbon + bow) — product development
+      w=1.7; h=1.55; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
+      var qt=propQ(cx,cy,w,w,lift+h);
+      // ribbon across the lid and down the two visible faces
+      body+='<polyline points="'+pstr([qt(w/2,0,0),qt(w/2,w,0)])+'" fill="none" stroke="#fff" stroke-width="4" opacity="0.92"/>';
+      body+='<polyline points="'+pstr([qt(0,w/2,0),qt(w,w/2,0)])+'" fill="none" stroke="#fff" stroke-width="4" opacity="0.92"/>';
+      var qf=propQ(cx,cy,w,w,lift);
+      body+='<polyline points="'+pstr([qt(w/2,w,0),qf(w/2,w,0)])+'" fill="none" stroke="#fff" stroke-width="4" opacity="0.85"/>';
+      body+='<polyline points="'+pstr([qt(w,w/2,0),qf(w,w/2,0)])+'" fill="none" stroke="#fff" stroke-width="4" opacity="0.85"/>';
+      // bow on the lid
+      var tc=qt(w/2,w/2,0);
+      body+='<path d="M'+tc[0].toFixed(1)+','+tc[1].toFixed(1)+' l -12,-9 l 0,15 z" fill="#fff"/>'
+          +'<path d="M'+tc[0].toFixed(1)+','+tc[1].toFixed(1)+' l 12,-9 l 0,15 z" fill="#fff"/>'
+          +'<circle cx="'+tc[0].toFixed(1)+'" cy="'+tc[1].toFixed(1)+'" r="3.6" fill="#fff"/>';
       topH=lift+h;
     } else if(type==='rapid'){
-      // rocket — rapid build / speed
-      w=0.95; h=1.5; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
-      body+=accentPyr(propQ(cx,cy,w,w,lift+h), w,w,1.0, accent); topH=lift+h+1.0;
+      // ROCKET with a flame — rapid build / speed
+      w=1.15; h=1.8; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
+      body+=accentPyr(propQ(cx,cy,w,w,lift+h), w,w,1.15, accent);
+      // porthole on the front-left face
+      var pw2=propQ(cx,cy,w,w,lift+h*0.6)(0,w/2,0);
+      body+='<circle cx="'+pw2[0].toFixed(1)+'" cy="'+pw2[1].toFixed(1)+'" r="'+(S*0.17).toFixed(1)+'" fill="#fff"/>';
+      // exhaust flame under the body
+      var bc=propQ(cx,cy,w,w,lift)(0.5*w,0.5*w,0);
+      body+='<path d="M'+(bc[0]-11).toFixed(1)+','+bc[1].toFixed(1)+' Q'+bc[0].toFixed(1)+','+(bc[1]+30).toFixed(1)+' '+(bc[0]+11).toFixed(1)+','+bc[1].toFixed(1)+' Z" fill="#ff9f1c" opacity="0.9"/>'
+          +'<path d="M'+(bc[0]-5).toFixed(1)+','+bc[1].toFixed(1)+' Q'+bc[0].toFixed(1)+','+(bc[1]+18).toFixed(1)+' '+(bc[0]+5).toFixed(1)+','+bc[1].toFixed(1)+' Z" fill="#ffd166"/>';
+      topH=lift+h+1.15;
     } else if(type==='qa'){
-      // shield with a check-mark — quality & testing
-      body+=accentFrustumC(cx,cy,lift,1.7,1.7,0.9,0.9,1.6,accent);
-      body+=checkMark(cx,cy,lift+1.62,'#ffffff');
-      topH=lift+1.6;
+      // a SHIELD with a check — quality & testing (single floating icon, no base)
+      var K=S*1.15, sp=[[-0.86,-0.92],[0.86,-0.92],[0.98,-0.12],[0.58,0.72],[0,1.3],[-0.58,0.72],[-0.98,-0.12]];
+      var fr=sp.map(function(u){return [Px+u[0]*K, Py+u[1]*K];});
+      var bk=fr.map(function(p){return [p[0]+DX,p[1]+DY];});
+      body+=poly2(bk,accent,0.5)+poly2(fr,accent,0.95,'stroke="var(--edge)" stroke-width="1.5"');
+      body+='<polyline points="'+pstr([[Px-0.34*K,Py+0.02*K],[Px-0.05*K,Py+0.38*K],[Px+0.48*K,Py-0.34*K]])+'" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>';
+      return { shadow:shadow, body:body, mx:Px, my:Py-1.55*K };
     } else if(type==='vision'){
-      // core cube + orbit ring + iris — AI vision (an eye)
-      w=1.15; h=1.15; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
-      var ct=propQ(cx,cy,w,w,lift+h)(0.5,0.5,0);
-      body+=ring(ct[0], ct[1]-S*0.22, '#fff')
-          +'<circle cx="'+ct[0].toFixed(1)+'" cy="'+(ct[1]-S*0.22).toFixed(1)+'" r="'+(S*0.16).toFixed(1)+'" fill="#fff"/>';
-      topH=lift+h+0.85;
+      // a floating EYE — AI vision
+      var EW=S*1.12, EH=S*0.72;
+      body+='<ellipse cx="'+(Px+DX).toFixed(1)+'" cy="'+(Py+DY).toFixed(1)+'" rx="'+EW.toFixed(1)+'" ry="'+EH.toFixed(1)+'" fill="'+accent+'" fill-opacity="0.5"/>';
+      body+='<ellipse cx="'+Px.toFixed(1)+'" cy="'+Py.toFixed(1)+'" rx="'+EW.toFixed(1)+'" ry="'+EH.toFixed(1)+'" fill="#fff" stroke="'+accent+'" stroke-width="3.5"/>';
+      body+='<circle cx="'+Px.toFixed(1)+'" cy="'+Py.toFixed(1)+'" r="'+(S*0.42).toFixed(1)+'" fill="'+accent+'"/>';
+      body+='<circle cx="'+Px.toFixed(1)+'" cy="'+Py.toFixed(1)+'" r="'+(S*0.18).toFixed(1)+'" fill="#182033"/>';
+      body+='<circle cx="'+(Px-S*0.13).toFixed(1)+'" cy="'+(Py-S*0.13).toFixed(1)+'" r="'+(S*0.08).toFixed(1)+'" fill="#fff"/>';
+      return { shadow:shadow, body:body, mx:Px, my:Py-EH-S*0.9 };
     } else if(type==='loop'){
-      // core cube + twin rings — software engineering loop (SEL)
-      w=1.1; h=1.15; q=propQ(cx,cy,w,w,lift); body+=accentBox(q,w,w,h,accent);
-      var cl=propQ(cx,cy,w,w,lift+h)(0.5,0.5,0);
-      body+=ring(cl[0], cl[1]-S*0.22, '#fff')+ring(cl[0], cl[1]-S*0.56, '#fff');
-      topH=lift+h+0.85;
+      // an INFINITY loop (two interlocking rings) — software engineering loop (SEL)
+      var rx=S*0.5, ry=S*0.36, sw2=S*0.26, lc=[Px-S*0.46,Py], rc=[Px+S*0.46,Py];
+      function ringAt(c,fill,op){ return '<ellipse cx="'+c[0].toFixed(1)+'" cy="'+c[1].toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+ry.toFixed(1)+'" fill="none" stroke="'+fill+'" stroke-opacity="'+op+'" stroke-width="'+sw2.toFixed(1)+'"/>'; }
+      body+=ringAt([lc[0]+DX,lc[1]+DY],accent,0.5)+ringAt([rc[0]+DX,rc[1]+DY],accent,0.5);
+      body+=ringAt(lc,accent,0.96)+ringAt(rc,accent,0.96);
+      return { shadow:shadow, body:body, mx:Px, my:Py-ry-S*1.0 };
     } else {
       // welcome desk — a wide, low reception block
-      w=1.8; d=1.2; h=0.95; q=propQ(cx,cy,w,d,lift); body+=accentBox(q,w,d,h,accent); topH=lift+h;
+      w=1.9; d=1.25; h=1.0; q=propQ(cx,cy,w,d,lift); body+=accentBox(q,w,d,h,accent); topH=lift+h;
     }
     var mk=propQ(cx,cy,1,1,topH+0.55)(0.5,0.5,0);
     return { shadow:shadow, body:body, mx:mk[0], my:mk[1] };
@@ -1797,11 +1826,21 @@
       var backChairs='', frontChairs='';
       chairPos.forEach(function(c){ if(c[1]<0) backChairs+=chair(c[0],c[1]); else frontChairs+=chair(c[0],c[1]); });
       var tbl='';
-      [[-TA+0.2,-TB+0.2],[TA-0.4,-TB+0.2],[-TA+0.2,TB-0.4],[TA-0.4,TB-0.4]].forEach(function(p){ tbl+=boxBld(p[0],p[1],0.2,0.2,TH,0); });
-      tbl+=boxBld(-TA+0.2,-TB+0.2,2*TA-0.4,2*TB-0.4,0.18,TH-0.22);   // apron
-      tbl+=boxBld(-TA,-TB,2*TA,2*TB,0.16,TH);                        // top slab
-      var qtop=function(la,lb,lu){ return wp(-TA+la,-TB+lb,TH+0.16+lu); };
-      tbl+=accentTop(qtop,2*TA,2*TB,0,'var(--deep)',0.08);
+      // pedestal legs (inset, hidden under the top) + a central foot
+      [[-TA+0.5,-TB+0.4],[TA-0.7,-TB+0.4],[-TA+0.5,TB-0.6],[TA-0.7,TB-0.6]].forEach(function(p){ tbl+=boxBld(p[0],p[1],0.22,0.22,TH,0); });
+      // realistic OCTAGONAL boardroom top (cut corners) on the legs
+      var cc=0.9, tth=0.2;
+      var oct=[[-TA+cc,-TB],[TA-cc,-TB],[TA,-TB+cc],[TA,TB-cc],[TA-cc,TB],[-TA+cc,TB],[-TA,TB-cc],[-TA,-TB+cc]];
+      var topF=[], botF=[];
+      oct.forEach(function(p){ topF.push(wp(p[0],p[1],TH+tth)); botF.push(wp(p[0],p[1],TH)); });
+      var si; for(si=0; si<oct.length; si++){
+        var nx=(si+1)%oct.length, midA=(oct[si][0]+oct[nx][0])/2;
+        tbl+=poly([botF[si],botF[nx],topF[nx],topF[si]], midA>0?'right':'left');
+      }
+      tbl+=poly(topF,'roof')+line(topF.concat([topF[0]]),'edge');
+      // a soft inlay ring on the tabletop
+      var inF=[]; oct.forEach(function(p){ inF.push(wp(p[0]*0.72,p[1]*0.72,TH+tth+0.001)); });
+      tbl+=line(inF.concat([inF[0]]),'room-panel-edge');
       world+='<g class="bld">'+backChairs+tbl+frontChairs+'</g>';
     }
 
