@@ -512,61 +512,47 @@
   .cloudfx.out .cloud { transform:translateX(calc(var(--dir) * 122vw)) scale(1.5); opacity:0; }
   @media (prefers-reduced-motion:reduce){ .cloudfx, .cloudfx .cloud { transition:none; } }
 
-  /* ===== building interior: the agenda space ===== */
-  .interior { position:fixed; inset:0; z-index:65; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    background:
-      radial-gradient(120% 80% at 50% -6%, color-mix(in srgb, var(--pink) 18%, transparent), transparent 60%),
-      linear-gradient(180deg, var(--paper), var(--card));
+  /* ===== building interior: a 2.5D room ===== */
+  .interior { position:fixed; inset:0; z-index:65; overflow:hidden;
     opacity:0; transition:opacity .5s ease; }
   .interior.show { opacity:1; }
   .interior[hidden] { display:none; }
-  .interior-glow { position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(60% 40% at 50% 8%, color-mix(in srgb, var(--pink) 14%, transparent), transparent 70%); }
-  .interior-exit { position:fixed; z-index:3; top:calc(16px + env(safe-area-inset-top,0px)); left:16px;
+  .interior-exit { position:absolute; z-index:6; top:calc(16px + env(safe-area-inset-top,0px)); left:16px;
     font:inherit; font-weight:700; font-size:13px; color:var(--ink); background:var(--card);
     border:1px solid var(--line); border-radius:999px; padding:9px 15px; cursor:pointer; box-shadow:var(--shadow);
     transition:background .18s ease, transform .18s ease; }
   .interior-exit:hover { background:var(--soft); transform:translateX(-2px); }
-  .interior-head { position:relative; z-index:2; text-align:center; max-width:820px; margin:0 auto;
-    padding:clamp(72px,12vh,120px) 24px 8px; }
-  .interior-eyebrow { margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.24em;
+  .room { position:absolute; inset:0; overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 16%, var(--world-a), var(--world-b) 80%); }
+  .room::after { content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(24,32,51,.08)); }
+  .room-stage { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #roomCam { transition:transform 1.25s cubic-bezier(.22,.61,.36,1); }
+  @media (prefers-reduced-motion:reduce){ #roomCam { transition:none; } }
+  .room-hint { position:absolute; z-index:4; left:50%; transform:translateX(-50%);
+    top:calc(72px + env(safe-area-inset-top,0px)); text-align:center; max-width:min(88vw,560px);
+    pointer-events:none; transition:opacity .5s ease, transform .5s ease; }
+  .room-hint.gone { opacity:0; transform:translateX(-50%) translateY(-10px); }
+  .room-hint .eyebrow { margin:0 0 8px; font-size:11.5px; font-weight:700; letter-spacing:.22em;
     text-transform:uppercase; color:var(--pink); }
-  .interior-head h2 { margin:0; font-family:'Bricolage Grotesque',serif; font-weight:800;
-    font-size:clamp(28px,5vw,46px); line-height:1.03; letter-spacing:-.02em; color:var(--ink); text-wrap:balance; }
-  .interior-sub { margin:12px 0 0; font-size:14.5px; color:var(--muted); }
-
-  .agenda-space { position:relative; z-index:2; max-width:1080px; margin:0 auto;
-    padding:clamp(24px,5vh,44px) 24px 40px;
-    display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; align-items:start; }
-  .prop { position:relative; background:var(--card); border:1px solid var(--line); border-radius:20px;
-    padding:22px 20px 20px; box-shadow:var(--shadow); text-align:left; cursor:pointer; color:inherit;
-    display:flex; flex-direction:column; gap:12px; font:inherit;
-    transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-  .prop:hover { transform:translateY(-4px); box-shadow:0 18px 40px -18px rgba(0,0,0,.4); border-color:color-mix(in srgb, var(--pink) 45%, var(--line)); }
-  .prop-num { position:absolute; top:16px; right:18px; font-family:'Bricolage Grotesque'; font-weight:800;
-    font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
-  .prop-pedestal { width:66px; height:66px; border-radius:18px; display:inline-flex; align-items:center; justify-content:center;
-    color:var(--pink); background:color-mix(in srgb, var(--pink) 12%, var(--card));
-    border:1px solid color-mix(in srgb, var(--pink) 28%, var(--line)); }
-  .prop-pedestal svg { width:34px; height:34px; }
-  .prop h3 { margin:0; font-family:'Bricolage Grotesque',serif; font-weight:800; font-size:17.5px;
-    line-height:1.16; letter-spacing:-.01em; color:var(--ink); }
-  .prop-subs { list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:6px;
-    max-height:0; overflow:hidden; opacity:0; transition:max-height .3s ease, opacity .25s ease, margin .3s ease; }
-  .prop.open .prop-subs { max-height:220px; opacity:1; margin-top:2px; }
-  .prop-subs li { font-size:12px; font-weight:600; color:var(--deep); background:var(--soft);
-    border-radius:999px; padding:4px 11px; }
-  .prop-toggle { font-size:12.5px; font-weight:700; color:var(--pink); display:inline-flex; align-items:center; gap:6px; }
-  .prop-toggle::after { content:'›'; transition:transform .25s ease; }
-  .prop.open .prop-toggle::after { transform:rotate(90deg); }
-  .prop-toggle.is-empty { color:var(--muted); }
-  .interior-floor { position:fixed; left:0; right:0; bottom:0; height:120px; z-index:1; pointer-events:none;
-    background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--pink) 8%, transparent));
-    border-top:1px solid color-mix(in srgb, var(--pink) 16%, var(--line)); }
-  @media (max-width:560px){
-    .interior-floor { height:70px; }
-    .agenda-space { gap:14px; }
-  }
+  .room-hint h1 { margin:0; font-family:'Bricolage Grotesque',serif; font-weight:800;
+    font-size:clamp(24px,4.4vw,40px); line-height:1.04; letter-spacing:-.02em; color:var(--ink); text-wrap:balance; }
+  .room-hint .sub { margin:10px 0 0; font-size:13.5px; color:var(--muted); }
+  .room-tools { z-index:5; }
+  .room-callout { z-index:8; }
+  .room-callout .r-note { margin:0 0 10px; font-size:13.5px; line-height:1.5; color:var(--muted); }
+  /* iso prop shapes reuse .bld face classes; add per-prop accent + interactions */
+  .prop3d { cursor:pointer; }
+  .prop3d .p-accent { transition:fill-opacity .3s ease; }
+  .p-emblem-ic { fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+  .p-badge { stroke:var(--paper); stroke-width:3; transition:transform .25s ease; transform-box:fill-box; transform-origin:center; }
+  .prop-marker:hover .p-badge, .prop-marker.active .p-badge { transform:scale(1.14); }
+  .p-shadow { fill:rgba(24,32,51,.22); filter:url(#softS); }
+  :root[data-theme="dark"] .p-shadow, :root:not([data-theme="light"]) .p-shadow { fill:rgba(0,0,0,.6); }
+  .room-floor-fill { fill:var(--plaza); }
+  .room-grid { stroke:var(--line-strong); stroke-width:1; opacity:.35; fill:none; vector-effect:non-scaling-stroke; }
+  .room-wall-l { fill:var(--bld-left); } .room-wall-r { fill:var(--bld-right); }
+  .room-wall-edge { stroke:var(--edge); stroke-width:1.5; fill:none; vector-effect:non-scaling-stroke; }
 
   /* ===== side rails (contacts + options) ===== */
   .rail { position:fixed; top:50%; transform:translateY(-50%); z-index:5; width:214px;
@@ -775,17 +761,26 @@
     <span class="cloud" style="--w:320px;--h:230px;right:30%;top:72%;--dir:1"></span>
   </div>
 
-  <!-- building interior: the agenda space with a prop per session -->
+  <!-- building interior: a 2.5D room where each session is an iso prop -->
   <div class="interior" id="interior" hidden>
-    <div class="interior-glow" aria-hidden="true"></div>
     <button class="interior-exit" id="interiorExit">← Back to map</button>
-    <header class="interior-head">
-      <p class="interior-eyebrow" id="intEyebrow"></p>
-      <h2 id="intTitle"></h2>
-      <p class="interior-sub" id="intSub"></p>
-    </header>
-    <div class="agenda-space" id="agendaSpace"></div>
-    <div class="interior-floor" aria-hidden="true"></div>
+    <div class="room" id="room">
+      <svg class="room-stage" id="roomStage" xmlns="http://www.w3.org/2000/svg"><g id="roomCam"></g></svg>
+      <div class="room-hint" id="roomHint">
+        <p class="eyebrow" id="intEyebrow"></p>
+        <h1 id="intTitle"></h1>
+        <p class="sub" id="intSub"></p>
+      </div>
+      <div class="maptools room-tools"><button id="roomOverview">Overview</button></div>
+      <article class="callout room-callout" id="roomCallout" hidden>
+        <span class="callout-stem" aria-hidden="true"></span>
+        <button class="callout-close" id="roomCalloutClose" aria-label="Close">×</button>
+        <div class="top"><span class="chip" id="r-chip"></span><span class="place" id="r-place"></span></div>
+        <h2 id="r-title"></h2>
+        <p class="r-note" id="r-note"></p>
+        <div class="tags" id="r-tags"></div>
+      </article>
+    </div>
   </div>
 </main>
 
@@ -1426,94 +1421,235 @@
   document.getElementById('overview').addEventListener('click', goOverview);
   window.addEventListener('resize', function(){ if(overview){focusOverview();} else if(active>=0){focusLoc(active);} });
 
-  // ---- building interiors: enter → clouds transition → agenda space ----
+  // ---- building interiors: enter → clouds transition → 2.5D room ----
   var cloudFx = document.getElementById('cloudFx');
   var interior = document.getElementById('interior');
   var intEyebrow = document.getElementById('intEyebrow'),
       intTitle = document.getElementById('intTitle'),
-      intSub = document.getElementById('intSub'),
-      agendaSpace = document.getElementById('agendaSpace');
+      intSub = document.getElementById('intSub');
   var cEnter = document.getElementById('c-enter');
+  var roomEl = document.getElementById('room'), roomCam = document.getElementById('roomCam'),
+      roomHint = document.getElementById('roomHint'), roomCallout = document.getElementById('roomCallout');
+  var rChip=document.getElementById('r-chip'), rPlace=document.getElementById('r-place'),
+      rTitle=document.getElementById('r-title'), rNote=document.getElementById('r-note'),
+      rTags=document.getElementById('r-tags');
 
-  var PROPS = {
-    vision:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/></svg>',
-    product:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 21 7v10l-9 4.5L3 17V7l9-4.5z"/><path d="M3 7l9 4.5L21 7M12 11.5V21.5"/></svg>',
-    loop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7a5 5 0 1 1-3.5 8.5L7 9A5 5 0 1 0 3.5 15.5"/><path d="M14 4l3 3-3 3M10 20l-3-3 3-3"/></svg>',
-    qa:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l7.5 3v6c0 4.6-3.2 8-7.5 10-4.3-2-7.5-5.4-7.5-10v-6l7.5-3z"/><path d="M8.5 12l2.5 2.5L16 9"/></svg>',
-    rapid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5 4 13.5h6l-1 8 9-11h-6l1-8z"/></svg>',
-    welcome:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/><circle cx="12" cy="7.5" r="4"/></svg>',
-    'default':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/></svg>'
+  // per-session accent, short label, and emblem (inner 24x24 line-art)
+  var ACCENT = { vision:'#7c5cff', product:'#1fa971', loop:'#e0518e', qa:'#e8973a', rapid:'#ff4d6d', welcome:'#3d9be9', 'default':'#8a94a6' };
+  var SHORT  = { vision:'Vision & Strategy', product:'Product Dev', loop:'SEL', qa:'QA & Testing', rapid:'Rapid Build', welcome:'Welcome', 'default':'Session' };
+  var EMBLEM = {
+    vision:'<path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/>',
+    product:'<path d="M12 2.5 21 7v10l-9 4.5L3 17V7l9-4.5z"/><path d="M3 7l9 4.5L21 7M12 11.5V21.5"/>',
+    loop:'<path d="M17 7a5 5 0 1 1-3.5 8.5L7 9A5 5 0 1 0 3.5 15.5"/><path d="M14 4l3 3-3 3M10 20l-3-3 3-3"/>',
+    qa:'<path d="M12 2.5l7.5 3v6c0 4.6-3.2 8-7.5 10-4.3-2-7.5-5.4-7.5-10v-6l7.5-3z"/><path d="M8.5 12l2.5 2.5L16 9"/>',
+    rapid:'<path d="M13 2.5 4 13.5h6l-1 8 9-11h-6l1-8z"/>',
+    welcome:'<path d="M4 20v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1"/><circle cx="12" cy="7.5" r="4"/>',
+    'default':'<path d="M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/>'
   };
-  function propSVG(name){ return PROPS[name] || PROPS['default']; }
 
-  function renderInterior(i){
-    var l = LOC[i];
-    intEyebrow.textContent = l.venue || l.name;
-    intTitle.textContent = l.name;
-    intSub.textContent = l.title + ' · ' + l.time;
-    var ss = l.sessions || [];
-    var placeholder = (l.type !== 'board' && ss.length <= 1);
-    agendaSpace.innerHTML = ss.map(function(s, idx){
-      var subs = (s.sub && s.sub.length)
-        ? '<ul class="prop-subs">' + s.sub.map(function(x){ return '<li>'+x+'</li>'; }).join('') + '</ul>'
-        : '';
-      var toggle = (s.sub && s.sub.length)
-        ? '<span class="prop-toggle">'+s.sub.length+' focus areas</span>'
-        : '<span class="prop-toggle is-empty">Session</span>';
-      return '<button class="prop" type="button" data-open="0">' +
-               '<span class="prop-num">'+('0'+(idx+1)).slice(-2)+'</span>' +
-               '<span class="prop-pedestal">'+propSVG(s.prop)+'</span>' +
-               '<h3>'+s.t+'</h3>' + toggle + subs +
-             '</button>';
-    }).join('') + (placeholder
-      ? '<p style="grid-column:1/-1;margin:6px 2px 0;font-size:13px;color:var(--muted)">Full session agenda for this building is coming soon.</p>'
-      : '');
+  // ---- iso prop drawing (reuses module iso axes Ex/Ey/Dx/Dy/Ux/Uy + poly/line/polyFill) ----
+  function pstr(list){ var s=''; for(var i=0;i<list.length;i++){ s+=list[i][0].toFixed(1)+','+list[i][1].toFixed(1)+' '; } return s; }
+  // returns q(a,b,up) with the footprint (w×d) centred on screen point (cx,cy), lifted by `lift` tiles
+  function propQ(cx, cy, w, d, lift){
+    var bx = cx - Ex*(w/2) - Dx*(d/2) + Ux*(lift||0);
+    var by = cy - Ey*(w/2) - Dy*(d/2) + Uy*(lift||0);
+    return function(a,b,up){ return [ bx+Ex*a+Dx*b+Ux*up, by+Ey*a+Dy*b+Uy*up ]; };
+  }
+  function accentTop(q,w,d,h,color,op){
+    return '<polygon class="p-accent" fill="'+color+'" fill-opacity="'+op+'" points="'+pstr([q(0,0,h),q(w,0,h),q(w,d,h),q(0,d,h)])+'"/>';
+  }
+  function isoBox(q,w,d,h){
+    var fRight=[q(w,0,0),q(w,d,0),q(w,d,h),q(w,0,h)];
+    var fLeft =[q(0,d,0),q(w,d,0),q(w,d,h),q(0,d,h)];
+    var fRoof =[q(0,0,h),q(w,0,h),q(w,d,h),q(0,d,h)];
+    return poly(fRight,'right')+poly(fLeft,'left')+poly(fRoof,'roof')
+      + polyFill(fRight,'url(#gRight)')+polyFill(fLeft,'url(#gLeft)')+polyFill(fRoof,'url(#gRoof)')
+      + line([q(0,0,h),q(w,0,h),q(w,d,h),q(0,d,h),q(0,0,h)],'edge')
+      + line([q(w,d,0),q(w,d,h)],'edge') + line([q(w,0,0),q(w,0,h)],'edge') + line([q(0,d,0),q(0,d,h)],'edge');
+  }
+  function pyramid(q,w,d,ph,color){
+    var apex=q(w/2,d/2,ph), p00=q(0,0,0),pW0=q(w,0,0),pWD=q(w,d,0),p0D=q(0,d,0);
+    return poly([p00,pW0,apex],'roof')+poly([pW0,pWD,apex],'right')+poly([p0D,pWD,apex],'left')
+      + '<polygon class="p-accent" fill="'+color+'" fill-opacity="0.5" points="'+pstr([p00,pW0,apex])+'"/>'
+      + line([p00,apex],'edge')+line([pW0,apex],'edge')+line([pWD,apex],'edge')+line([p0D,apex],'edge');
+  }
+  function frustum(cx,cy,lift,bw,bd,tw,td,h,color){
+    var qb=propQ(cx,cy,bw,bd,lift), qt=propQ(cx,cy,bw,bd,lift+h);
+    var ox=(bw-tw)/2, oy=(bd-td)/2;
+    var bW0=qb(bw,0,0),bWD=qb(bw,bd,0),b0D=qb(0,bd,0),b00=qb(0,0,0);
+    var t00=qt(ox,oy,0),tW0=qt(ox+tw,oy,0),tWD=qt(ox+tw,oy+td,0),t0D=qt(ox,oy+td,0);
+    var right=[bW0,bWD,tWD,tW0], left=[b0D,bWD,tWD,t0D], roof=[t00,tW0,tWD,t0D];
+    return poly(right,'right')+poly(left,'left')+poly(roof,'roof')
+      + polyFill(right,'url(#gRight)')+polyFill(left,'url(#gLeft)')+polyFill(roof,'url(#gRoof)')
+      + '<polygon class="p-accent" fill="'+color+'" fill-opacity="0.42" points="'+pstr(roof)+'"/>'
+      + line([t00,tW0,tWD,t0D,t00],'edge')+line([bWD,tWD],'edge')+line([bW0,tW0],'edge')+line([b0D,t0D],'edge')+line([b00,t00],'edge');
+  }
+  function ring(x,y,color){
+    return '<ellipse cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" rx="'+(S*0.55).toFixed(1)+'" ry="'+(S*0.27).toFixed(1)+'" fill="none" stroke="'+color+'" stroke-width="3.6"/>';
+  }
+  // build one distinct iso prop; returns {svg, mx, my} (mx,my = badge anchor above it)
+  function drawShape(type, cx, cy, accent){
+    var svg='', lift, topH, w, d, h, q;
+    svg += '<ellipse class="p-shadow" cx="'+(cx+7).toFixed(1)+'" cy="'+(cy+7).toFixed(1)+'" rx="'+(S*1.55).toFixed(1)+'" ry="'+(S*0.8).toFixed(1)+'"/>';
+    var pw=2.2, ph=0.4, qp=propQ(cx,cy,pw,pw,0);
+    svg += isoBox(qp,pw,pw,ph) + accentTop(qp,pw,pw,ph,accent,0.26);
+    lift = ph;
+    if(type==='product'){
+      w=1.5; h=1.1; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
+      var w2=1.0,h2=0.85, q2=propQ(cx,cy,w2,w2,lift+h); svg+=isoBox(q2,w2,w2,h2)+accentTop(q2,w2,w2,h2,accent,0.55);
+      topH=lift+h+h2;
+    } else if(type==='rapid'){
+      w=0.9; h=1.9; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
+      svg+=pyramid(propQ(cx,cy,w,w,lift+h), w,w,0.95, accent); topH=lift+h+0.95;
+    } else if(type==='qa'){
+      svg+=frustum(cx,cy,lift,1.9,1.9,1.05,1.05,1.7,accent); topH=lift+1.7;
+    } else if(type==='vision' || type==='loop'){
+      w=1.1; h=1.6; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4);
+      var ct=propQ(cx,cy,w,w,lift+h)(0.5,0.5,0);
+      svg+=ring(ct[0], ct[1]-S*0.25, accent);
+      if(type==='vision'){ svg+='<circle cx="'+ct[0].toFixed(1)+'" cy="'+(ct[1]-S*0.25).toFixed(1)+'" r="'+(S*0.15).toFixed(1)+'" fill="'+accent+'"/>'; }
+      else { svg+=ring(ct[0], ct[1]-S*0.62, accent); }
+      topH=lift+h+0.95;
+    } else {
+      w=1.6; h=1.2; q=propQ(cx,cy,w,w,lift); svg+=isoBox(q,w,w,h)+accentTop(q,w,w,h,accent,0.4); topH=lift+h;
+    }
+    var mk=propQ(cx,cy,1,1,topH+0.55)(0.5,0.5,0);
+    return { svg:svg, mx:mk[0], my:mk[1] };
+  }
+
+  // ---- room state + camera ----
+  var roomProps=[], roomPropEls=[], roomMkEls=[], roomActive=-1, currentLoc=-1, inInterior=false;
+  function roomVP(){ return { w: roomEl.clientWidth||window.innerWidth, h: roomEl.clientHeight||window.innerHeight }; }
+  function roomBaseScale(v){
+    var isM=window.matchMedia('(max-width:820px)').matches, t=isM?0.66:0.9;
+    return Math.max(0.5, Math.min(1.7, Math.min(v.w/900, v.h/900) * 1.6 * t * 1.25));
+  }
+  function roomSetCam(cx,cy,sc,instant){
+    var v=roomVP(), tx=v.w/2-cx*sc, ty=v.h/2-cy*sc;
+    if(instant) roomCam.style.transition='none';
+    roomCam.setAttribute('transform','translate('+tx.toFixed(1)+','+ty.toFixed(1)+') scale('+sc.toFixed(3)+')');
+    if(instant) requestAnimationFrame(function(){ roomCam.style.transition=''; });
+  }
+  function roomFocusProp(i){ var v=roomVP(), sc=roomBaseScale(v), p=roomProps[i]; roomSetCam(p.x, p.y - S*1.4 + v.h*0.13/sc, sc); }
+  function roomFocusOverview(instant){
+    var v=roomVP(), xs=[], ys=[];
+    roomProps.forEach(function(p){ xs.push(p.x, p.mx); ys.push(p.y, p.my); });
+    var minX=Math.min.apply(null,xs)-170, maxX=Math.max.apply(null,xs)+170;
+    var minY=Math.min.apply(null,ys)-150, maxY=Math.max.apply(null,ys)+140;
+    var sc=Math.max(0.4, Math.min(1.2, Math.min(v.w/(maxX-minX), v.h/(maxY-minY))));
+    roomSetCam((minX+maxX)/2, (minY+maxY)/2, sc, instant);
+  }
+
+  function buildRoom(i){
+    var l=LOC[i], ss=l.sessions||[], n=ss.length;
+    currentLoc=i; roomProps=[]; roomPropEls=[]; roomMkEls=[];
+    var CX=0, CY=0, spanA=(n>1?3.7:0);
+    var pos=[];
+    for(var k=0;k<n;k++){
+      var a=(k-(n-1)/2)*spanA, b=(k%2===0?-1:1)*1.45;
+      pos.push([ CX+Ex*a+Dx*b, CY+Ey*a+Dy*b ]);
+    }
+    var world='', WH=3.2, FA=Math.max(6, spanA*(n-1)/2 + 3), FB=6.5;
+    function wp(a,b,up){ return [CX+Ex*a+Dx*b+Ux*up, CY+Ey*a+Dy*b+Uy*up]; }
+    // back walls (north + west), then floor, then grid
+    world+='<polygon class="room-wall-r" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,-FB,WH),wp(-FA,-FB,WH)])+'"/>';
+    world+=line([wp(-FA,-FB,WH),wp(FA,-FB,WH)],'room-wall-edge');
+    world+='<polygon class="room-wall-l" points="'+pstr([wp(-FA,-FB,0),wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)])+'"/>';
+    world+=line([wp(-FA,FB,0),wp(-FA,FB,WH),wp(-FA,-FB,WH)],'room-wall-edge');
+    world+='<polygon class="room-floor-fill" points="'+pstr([wp(-FA,-FB,0),wp(FA,-FB,0),wp(FA,FB,0),wp(-FA,FB,0)])+'"/>';
+    var ga,gb;
+    for(ga=-FA+1.7; ga<FA; ga+=1.7){ world+=line([wp(ga,-FB,0),wp(ga,FB,0)],'room-grid'); }
+    for(gb=-FB+1.7; gb<FB; gb+=1.7){ world+=line([wp(-FA,gb,0),wp(FA,gb,0)],'room-grid'); }
+    // props, painter-sorted back→front, markers on top
+    var order=[]; for(k=0;k<n;k++) order.push(k);
+    order.sort(function(A,B){ return pos[A][1]-pos[B][1]; });
+    var markers='';
+    order.forEach(function(idx){
+      var s=ss[idx], accent=ACCENT[s.prop]||ACCENT['default'], sh=drawShape(s.prop, pos[idx][0], pos[idx][1], accent);
+      world+='<g class="bld prop3d" id="rp'+idx+'" data-room-go="'+idx+'">'+sh.svg+'</g>';
+      var lbl=SHORT[s.prop]||('Session '+(idx+1));
+      markers+='<g class="marker prop-marker" id="rmk'+idx+'" data-room-go="'+idx+'" transform="translate('+sh.mx.toFixed(1)+','+sh.my.toFixed(1)+')">'
+        +'<circle class="ring" r="17"/>'
+        +'<circle class="p-badge" r="17" fill="'+accent+'"/>'
+        +'<g class="p-emblem-ic" stroke="#fff" transform="translate(-10.5,-10.5) scale(0.875)">'+(EMBLEM[s.prop]||EMBLEM['default'])+'</g>'
+        +'<text class="lbl" y="-28">'+lbl+'</text></g>';
+      roomProps[idx]={ x:pos[idx][0], y:pos[idx][1], mx:sh.mx, my:sh.my };
+    });
+    roomCam.innerHTML = world + markers;
+    for(k=0;k<n;k++){ roomPropEls[k]=document.getElementById('rp'+k); roomMkEls[k]=document.getElementById('rmk'+k); }
+  }
+
+  function showRoomCallout(i){
+    var s=LOC[currentLoc].sessions[i];
+    rChip.textContent=('0'+(i+1)).slice(-2);
+    rPlace.textContent=LOC[currentLoc].venue||LOC[currentLoc].name;
+    rTitle.textContent=s.t;
+    if(s.sub && s.sub.length){
+      rNote.textContent='Focus areas';
+      rTags.style.display=''; rTags.innerHTML=s.sub.map(function(t){return '<span class="tag">'+t+'</span>';}).join('');
+    } else {
+      rNote.textContent='Session in this room'; rTags.style.display='none'; rTags.innerHTML='';
+    }
+    roomCallout.hidden=false; roomCallout.classList.remove('show'); void roomCallout.offsetWidth; roomCallout.classList.add('show');
+  }
+  function hideRoomCallout(){ roomCallout.hidden=true; roomCallout.classList.remove('show'); }
+  function roomSelect(i){
+    roomActive=i; roomHint.classList.add('gone');
+    for(var k=0;k<roomPropEls.length;k++){
+      var on=(k===i);
+      if(roomPropEls[k]) roomPropEls[k].classList.toggle('active', on);
+      if(roomMkEls[k]) roomMkEls[k].classList.toggle('active', on);
+    }
+    roomFocusProp(i); showRoomCallout(i);
+  }
+  function roomOverview(){
+    roomActive=-1;
+    for(var k=0;k<roomPropEls.length;k++){ if(roomPropEls[k]) roomPropEls[k].classList.remove('active'); if(roomMkEls[k]) roomMkEls[k].classList.remove('active'); }
+    hideRoomCallout(); roomHint.classList.remove('gone'); roomFocusOverview();
   }
 
   function cloudTransition(mid, done){
     if(reduce){ if(mid) mid(); if(done) done(); return; }
-    cloudFx.classList.remove('out');
-    cloudFx.classList.add('active');
+    cloudFx.classList.remove('out'); cloudFx.classList.add('active');
     requestAnimationFrame(function(){ requestAnimationFrame(function(){ cloudFx.classList.add('in'); }); });
     setTimeout(function(){
       if(mid) mid();
-      cloudFx.classList.remove('in');
-      cloudFx.classList.add('out');
-      setTimeout(function(){
-        cloudFx.classList.remove('active','out');
-        if(done) done();
-      }, 1000);
+      cloudFx.classList.remove('in'); cloudFx.classList.add('out');
+      setTimeout(function(){ cloudFx.classList.remove('active','out'); if(done) done(); }, 1000);
     }, 950);
   }
 
-  var inInterior = false;
   function enterBuilding(i){
     if(i<0 || inInterior) return;
-    inInterior = true;
+    inInterior=true;
     cloudTransition(function(){
-      renderInterior(i);
-      interior.hidden = false;
-      void interior.offsetWidth;
-      interior.classList.add('show');
-      interior.scrollTop = 0;
+      intEyebrow.textContent=LOC[i].venue||LOC[i].name;
+      intTitle.textContent=LOC[i].name;
+      intSub.textContent=LOC[i].title+' · '+LOC[i].time;
+      interior.hidden=false; void interior.offsetWidth; interior.classList.add('show');
+      buildRoom(i);
+      roomActive=-1; hideRoomCallout(); roomHint.classList.remove('gone');
+      roomFocusOverview(true);
     });
   }
   function exitInterior(){
     if(!inInterior) return;
     cloudTransition(function(){
-      interior.classList.remove('show');
-      interior.hidden = true;
-    }, function(){ inInterior = false; });
+      interior.classList.remove('show'); interior.hidden=true; hideRoomCallout();
+    }, function(){ inInterior=false; });
   }
 
   if(cEnter) cEnter.addEventListener('click', function(){ enterBuilding(active); });
   document.getElementById('interiorExit').addEventListener('click', exitInterior);
-  agendaSpace.addEventListener('click', function(e){
-    var card = e.target.closest('.prop');
-    if(card) card.classList.toggle('open');
+  document.getElementById('roomOverview').addEventListener('click', roomOverview);
+  document.getElementById('roomCalloutClose').addEventListener('click', roomOverview);
+  roomEl.addEventListener('click', function(e){
+    var g=e.target.closest('[data-room-go]');
+    if(g) roomSelect(parseInt(g.getAttribute('data-room-go'),10));
   });
+  window.addEventListener('resize', function(){ if(inInterior){ if(roomActive>=0) roomFocusProp(roomActive); else roomFocusOverview(true); } });
   document.addEventListener('keydown', function(e){
-    if(e.key==='Escape' && inInterior) exitInterior();
+    if(e.key==='Escape' && inInterior){ if(roomActive>=0) roomOverview(); else exitInterior(); }
   });
 
   // ---- Theme toggle ----
